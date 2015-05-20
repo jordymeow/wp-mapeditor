@@ -1,3 +1,7 @@
+/*****************************
+		CORE 
+*****************************/
+
 #wpfooter {
 	display: none;
 }
@@ -19,16 +23,33 @@
 	margin-bottom: 0px;
 	border: none;
 	background: #3D3D3D;
+	z-index: 500;
+}
+
+#wme-navbar-footer {
+  position: absolute;
+  bottom: 0px;
+  width: 100%;
+  color: #A3A3A3;
+  font-size: 12px;
+  padding: 5px;
+  background: #3D3D3D;
+  height: 26px;
 }
 
 #wpme-map {
 	padding: 0px;
 	position: absolute;
+	top: 50px;
 	right: 0px;
 	left: 0px;
-	height: 100%;
+	bottom: 0px;
 	margin: 0px;
 	background: gray;
+}
+
+.folded #wpbody {
+	left: 36px !important;
 }
 
 @media all and (max-width: 960px) and (min-width: 400px) {
@@ -45,7 +66,56 @@
 		position: fixed;
 		right: 0px;
 		left: 0px;
-		top: 0px;
+		top: 45px;
 		bottom: 0px;
 	}
 }
+
+/*****************************
+		BUTTONS / ELEMENTS 
+*****************************/
+
+.multiSelect > button {
+	background: #337AB7;
+	color: white;
+	border: none;
+	min-height: 30px !important;
+	font-size: inherit;
+}
+
+.multiSelect > button:hover {
+	background-color: #286090;
+	border-color: #204d74;
+	background-image: none;
+}
+
+.multiSelectItem:hover {
+	background: #337AB7 !important;
+	background-image: none !important;
+}
+
+/*****************************
+		MAPS, ICONS AND STUFF 
+*****************************/
+
+#wpme-info {
+	position: absolute;
+	width: 160px;
+	right: 12px;
+	top: 65px;
+	background: rgba(255, 255, 255, 0.90);
+	color: rgb(0, 0, 0);
+	z-index: 500;
+	font-size: 14px;
+	padding: 3px 6px;
+	overflow: hidden;
+	box-shadow: 0px 0px 10px rgb(103, 103, 103);
+}
+
+.pin {
+	width: 32px;
+	height: 32px;
+	background: url('icons/pin.png') no-repeat;
+	background-size: 32px 32px;
+}
+

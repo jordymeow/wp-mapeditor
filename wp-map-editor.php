@@ -22,6 +22,7 @@ class Meow_Map_Editor {
 	}
 
 	function init() {
+		$this->create_db();
 		$this->create_infrastructure();
 		$this->create_roles();
 
@@ -29,7 +30,33 @@ class Meow_Map_Editor {
 			// Friendly display of the Locations
 			add_filter( 'manage_edit-map_columns', array( $this, 'manage_map_columns' ), 10, 2 );
 			add_action( 'manage_map_posts_custom_column', array( $this, 'manage_map_columns_content' ), 10, 2 );
+			add_action( 'created_map', array( $this, 'created_map' ), 10, 2 );
+			add_action( 'delete_map', array( $this, 'delete_map' ), 10, 2 );
 		}
+	}
+
+	/******************************
+		MAINTAIN AUTHOR FOR MAPS
+	******************************/
+
+	function created_map( $term_id, $tt_id ) {
+		global $wpdb;
+		$table = $this->get_db_role();
+		$this->delete_map( $term_id, $tt_id );
+		$wpdb->insert(
+			$table,
+			array(
+				'term_id' => $term_id,
+				'user_id' => get_current_user_id()
+			),
+			array( '%d', '%d', '%s' )
+		);
+	}
+
+	function delete_map( $term_id, $tt_id ) {
+		global $wpdb;
+		$table = $this->get_db_role();
+		$wpdb->delete( $table, array( 'term_id' => $term_id ) );
 	}
 
 	/******************************
@@ -166,6 +193,28 @@ class Meow_Map_Editor {
 		}
 	}
 
+	function get_db_role() {
+		global $wpdb;
+		$table_name = $wpdb->prefix . "wme_role"; 
+		return $table_name;
+	}
+
+	/****************************
+		DATABASE
+	****************************/
+
+	function create_db() {
+		$table_name = $this->get_db_role();
+		$sql = "CREATE TABLE $table_name (
+			id BIGINT(20) NOT NULL AUTO_INCREMENT,
+			user_id BIGINT(20) NULL,
+			term_id BIGINT(20) NULL,
+			UNIQUE KEY id (id)
+		);";
+		require_once(ABSPATH . 'wp-admin/includes/upgrade.php');
+		dbDelta($sql);
+	}
+
 	/****************************
 		CREATES SENTENCE AND RULE
 	****************************/
@@ -242,7 +291,8 @@ class Meow_Map_Editor {
 if ( class_exists( 'Meow_Map_Editor' ) ) {
 	if ( is_admin() ) {
 		include "wpme-editor.php";
-		new Meow_Map_Editor_Admin;
+		include "wpme-tools.php";
+		new Meow_Map_Admin_Tools;
 	}
 	else {
 		new Meow_Map_Editor;
