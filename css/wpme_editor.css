@@ -26,8 +26,8 @@
 	z-index: 500;
 }
 
-#wme-navbar-footer {
-  position: absolute;
+#wme-navbar-footer 
+{  position: absolute;
   bottom: 0px;
   width: 100%;
   color: #A3A3A3;
@@ -75,6 +75,10 @@
 		BUTTONS / ELEMENTS 
 *****************************/
 
+isteven-multi-select {
+	padding: 0px !important;
+}
+
 .multiSelect > button {
 	background: #337AB7;
 	color: white;
@@ -100,16 +104,27 @@
 
 #wpme-info {
 	position: absolute;
-	width: 160px;
-	right: 12px;
-	top: 65px;
+	width: 162px;
+	right: 10px;
+	bottom: 10px;
 	background: rgba(255, 255, 255, 0.90);
 	color: rgb(0, 0, 0);
 	z-index: 500;
-	font-size: 14px;
-	padding: 3px 6px;
+	font-size: 10px;
+	padding: 5px 8px 0px 8px;
 	overflow: hidden;
-	box-shadow: 0px 0px 10px rgb(103, 103, 103);
+	box-shadow: 0px 0px 2px rgb(42, 42, 42);
+}
+
+#wpme-info .header {
+}
+
+#wpme-info .header .name {
+	font-size: 14px;
+}
+
+#wpme-info .header .coordinates {
+	font-size: 8px;
 }
 
 .pin {

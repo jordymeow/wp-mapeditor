@@ -57,7 +57,16 @@ class Meow_Map_Admin_Tools extends Meow_Map_Admin_Editor {
 				else {
 					wp_set_object_terms( $post_id, $term, 'map', true );
 					$this->update_meta( $post_id, 'wme_coordinates', $location['GPS'] );
-					$this->update_meta( $post_id, 'wme_status', $location['Status'] );
+					if ( $location['Type'] == "WINTER" || $location['Type'] == "SUMMER" ||
+						$location['Type'] == "SPRING" || $location['Type'] == "AUTUMN" ) {
+						$this->update_meta( $post_id, 'wme_type', 'LANDSCAPE' );
+						$this->update_meta( $post_id, 'wme_period', $location['Type'] );
+					}
+					else {
+						$this->update_meta( $post_id, 'wme_type', !empty( $location['Type'] ) ? $location['Type'] : 'UNSPECIFIED' );
+						$this->update_meta( $post_id, 'wme_period', "ANYTIME" );
+					}
+					$this->update_meta( $post_id, 'wme_status', !empty( $location['Status'] ) ? $location['Status'] : 'DRAFT' );
 					$this->update_meta( $post_id, 'wme_rating', $location['Rating'] );
 					$this->update_meta( $post_id, 'wme_difficulty', $location['Difficulty'] );
 					echo "Added: " . $location['Name'] . "<br />";

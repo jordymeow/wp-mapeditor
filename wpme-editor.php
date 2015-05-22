@@ -53,12 +53,19 @@ class Meow_Map_Admin_Editor extends Meow_Map_Editor {
 		global $wpdb;
 		$table = $this->get_db_role();
 		$user_id = get_current_user_id();
+		$lastticked = get_transient( "wme_lastticked_" . $user_id );
 		$results = $wpdb->get_results( 
-			"SELECT t.term_id id, t.name name
+			"SELECT t.term_id id, t.name name, 0 ticked
 			FROM $table r, $wpdb->terms t
 			WHERE r.user_id = $user_id
 			AND r.term_id = t.term_id
 			GROUP BY t.term_id, t.name", OBJECT );
+		if ( !empty( $lastticked ) )
+			foreach ( $results as $result ) {
+				$result->ticked = false;
+				if ( $result->id == $lastticked )
+					$result->ticked = true;
+			}
 		echo json_encode( $results );
 		wp_die();
 	}
@@ -66,13 +73,14 @@ class Meow_Map_Admin_Editor extends Meow_Map_Editor {
 	function ajax_load_locations() {
 		$term_id = intval( $_POST['term_id'] );
 		global $wpdb;
-		error_log( "ajax_load_locations( $term_id )" );
 		$table = $this->get_db_role();
 		$user_id = get_current_user_id();
 		$results = $wpdb->get_results( $wpdb->prepare(
 			"SELECT p.ID id, p.post_title name, 
 			(SELECT meta_value FROM $wpdb->postmeta m WHERE m.post_id = p.ID AND m.meta_key = 'wme_coordinates') coordinates,
 			(SELECT meta_value FROM $wpdb->postmeta m WHERE m.post_id = p.ID AND m.meta_key = 'wme_status') status,
+			(SELECT meta_value FROM $wpdb->postmeta m WHERE m.post_id = p.ID AND m.meta_key = 'wme_type') type,
+			(SELECT meta_value FROM $wpdb->postmeta m WHERE m.post_id = p.ID AND m.meta_key = 'wme_period') period,
 			(SELECT meta_value FROM $wpdb->postmeta m WHERE m.post_id = p.ID AND m.meta_key = 'wme_rating') rating,
 			(SELECT meta_value FROM $wpdb->postmeta m WHERE m.post_id = p.ID AND m.meta_key = 'wme_difficulty') difficulty
 			FROM $table r, $wpdb->posts p, $wpdb->term_relationships s
@@ -81,6 +89,7 @@ class Meow_Map_Admin_Editor extends Meow_Map_Editor {
 			AND p.ID = s.object_id
 			AND s.term_taxonomy_id = r.term_id", $user_id, $term_id ), OBJECT );
 		echo json_encode( $results );
+		set_transient( "wme_lastticked_" . $user_id, $term_id, 60 * 60 * 24 * 100 );
 		wp_die();
 	}
 
@@ -93,9 +102,6 @@ class Meow_Map_Admin_Editor extends Meow_Map_Editor {
 
 	<nav id="wme-navbar-header" class="navbar navbar-inverse">
 		<div class="container-fluid">
-			<label class="pull-right">
-				{{locationsCount}} locations.
-			</label>
 			<isteven-multi-select class="btn-sm navbar-btn"
 				input-model="maps"
 				output-model="selectedMaps"
@@ -106,25 +112,63 @@ class Meow_Map_Admin_Editor extends Meow_Map_Editor {
 				on-item-click="mapSelect(data)"
 				tick-property="ticked">
 			</isteven-multi-select>
-			<button type="button" class="btn btn-primary btn-sm navbar-btn" data-toggle="modal" data-target="#wpme-modal-add-location">
+			<div class="btn-group">
+				<button type="button" class="btn btn-primary btn-sm dropdown-toggle" data-toggle="dropdown" aria-expanded="false">
+					<span ng-if="displayMode === 'status'">
+						<span class="glyphicon glyphicon-flag"></span> Status <span class="caret"></span>
+					</span>
+					<span ng-if="displayMode === 'type'">
+						<span class="glyphicon glyphicon-tree-conifer"></span> Type <span class="caret"></span>
+					</span>
+					<span ng-if="displayMode === 'period'">
+						<span class="glyphicon glyphicon-tree-conifer"></span> Period <span class="caret"></span>
+					</span>
+				</button>
+				<ul class="dropdown-menu" role="menu">
+					<li><a href="#" ng-click="setDisplayMode('status')"><span class="glyphicon glyphicon-flag"></span> Status</a></li>
+					<li><a href="#" ng-click="setDisplayMode('type')"><span class="glyphicon glyphicon-tree-conifer"></span> Type</a></li>
+					<li><a href="#" ng-click="setDisplayMode('period')"><span class="glyphicon glyphicon-tree-conifer"></span> Period</a></li>
+				</ul>
+			</div>
+			<button type="button" class="btn btn-success btn-sm navbar-btn" data-toggle="modal" data-target="#wpme-modal-add-location">
 				<span class="glyphicon glyphicon-plus"></span> Location
 			</button>
+			<button type="button" class="btn btn-success btn-sm navbar-btn" data-toggle="modal" data-target="#wpme-modal-add-location">
+				<span class="glyphicon glyphicon-asterisk"></span>
+			</button>
 		</div>
+
 	</nav>
 	<div id="wpme-info" class="ng-hide" ng-show="editor.selectedLocation">
-		{{editor.selectedLocation.name}}<br />
-		{{editor.selectedLocation.coordinates}}<br />
-		{{editor.selectedLocation.status}}<br />
+		<div class="header">
+			<span class="name">{{editor.selectedLocation.name}}</span><br />
+			<span class="coordinates">{{editor.selectedLocation.coordinates}}</span>
+		</div>
+		<div class="info">
+			Status: {{editor.selectedLocation.status}}<br />
+			Type: {{editor.selectedLocation.type}}<br />
+			Rating: {{editor.selectedLocation.rating}}<br />
+			Difficulty: {{editor.selectedLocation.difficulty}}<br />
+		</div>
 		<button type="button" class="btn btn-primary btn-sm navbar-btn" data-toggle="modal" data-target="#wpme-modal-add-location">
-			<span class="glyphicon glyphicon-plus"></span> Modify
+			<span class="glyphicon glyphicon-pencil"></span>
 		</button>
-		<button type="button" class="btn btn-warning btn-sm navbar-btn" data-toggle="modal" data-target="#wpme-modal-add-location">
-			<span class="glyphicon glyphicon-plus"></span> Delete
+		<button type="button" class="btn btn-primary btn-sm navbar-btn" data-toggle="modal" data-target="#wpme-modal-add-location">
+			<span class="glyphicon glyphicon glyphicon-move"></span>
+		</button>
+		<button type="button" class="btn btn-success btn-sm" data-toggle="modal" data-target="#wpme-modal-add-location">
+			<span class="glyphicon glyphicon-asterisk"></span>
+		</button>
+		<button type="button" class="btn btn-danger btn-sm" data-toggle="modal" data-target="#wpme-modal-add-location">
+			<span class="glyphicon glyphicon-trash"></span>
 		</button>
 	</div>
 	<div id="wpme-map"></div>
 	<nav id="wme-navbar-footer">
 		{{editor.hoveredLocation.name}}
+		<span class="distance" ng-show="editor.distanceFromSelected">
+			({{editor.distanceFromSelected}})
+		</span>
 	</nav>
 
 </div>
