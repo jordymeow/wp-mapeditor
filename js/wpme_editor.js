@@ -2,9 +2,22 @@
 
 	"use strict";
 
-	angular.module('MapEditor', [ "isteven-multi-select" ]);
+	angular.module('MapEditor', [ "isteven-multi-select", "angular-ladda" ]);
 	angular.module('MapEditor')
-	.controller("EditorCtrl", EditorCtrl);	
+	.controller("EditorCtrl", EditorCtrl)
+	.config(['$httpProvider', function ($httpProvider) {
+		// Intercept POST requests, convert to standard form encoding
+		$httpProvider.defaults.headers.post["Content-Type"] = "application/x-www-form-urlencoded";
+		$httpProvider.defaults.transformRequest.unshift(function (data, headersGetter) {
+			var key, result = [];
+			for (key in data) {
+				if (data.hasOwnProperty(key)) {
+				result.push(encodeURIComponent(key) + "=" + encodeURIComponent(data[key]));
+				}
+			}
+			return result.join("&");
+		});
+	}]);
 
 	/**************************************************************************************************
 			VENDOR FUNCTIONS
@@ -24,7 +37,7 @@
 	}
 
 	function deg2rad(deg) {
-		return deg * (Math.PI/180)
+		return deg * (Math.PI / 180)
 	}
 
 	/**************************************************************************************************
@@ -38,7 +51,9 @@
 	var icon_pin_exclamation;
 	var statuses = [ 'CHECKED', 'OK', 'MISLOCATED', 'DRAFT', 'UNAVAILABLE' ];
 	var types = [ 'ENTERTAINMENT', 'FACTORY', 'HOSPITAL', 'HOTEL', 'HOUSE', 'LANDSCAPE', 'INDUSTRIAL', 'MILITARY', 'OFFICE', 'RELIGION', 'SCHOOL', 'UNSPECIFIED', 'UNAVAILABLE' ];
-	var periods = [ 'SPRING', 'SUMMER', 'AUTUMN', 'WINTER' ];
+	var periods = [ 'ANYTIME', 'SPRING', 'SUMMER', 'AUTUMN', 'WINTER' ];
+	var ratings = [ 1, 2, 3, 4, 5 ];
+	var difficulties = [ 1, 2, 3, 4, 5 ];
 	var icons_status = {};
 	var icons_type = {};
 	var icons_period = {};
@@ -46,7 +61,6 @@
 
 	function init_gmap(click) {
 		gmap = new google.maps.Map(document.getElementById('wpme-map'), {
-			animatedZoom: false,
 			mapTypeId: google.maps.MapTypeId.TERRAIN,
 			center: { lat: 35.682839, lng: 139.682600 },
 			zoom: 4
@@ -171,7 +185,7 @@
 			EDITOR CONTROLLER
 	**************************************************************************************************/
 
-	function EditorCtrl($scope, $location, $timeout, $filter, $log) {
+	function EditorCtrl($scope, $location, $timeout, $filter, $log, $http) {
 		$scope.maps = [];
 		$scope.selectedMaps = [];
 		$scope.locations = {};
@@ -181,6 +195,20 @@
 		$scope.isFitBounded = false;
 		$scope.isAddingLocation = false;
 		$scope.isModifyingLocation = false;
+		$scope.isSavingLocation = false;
+
+		$scope.constants = { 
+			statuses: statuses,
+			periods: periods,
+			types: types,
+			difficulties: difficulties,
+			ratings: ratings
+		};
+
+		var maps = [];
+
+		$http.defaults.withCredentials = true;
+		$http.defaults.useXDomain = true;
 
 		$scope.editor = {
 			hoveredLocation: null,
@@ -195,18 +223,19 @@
 			$scope.$apply();
 		});
 
-		jQuery.post( ajaxurl, { action: 'load_maps' }, function(response) {
-			var maps = [];
-			var data = angular.fromJson(response);
+		$http.post(ajaxurl, { 
+			'action': 'load_maps'
+		}).success(function (reply) {
+			var data = angular.fromJson(reply.data);
 			angular.forEach(data, function (m) {
 				maps.push({ id: m.id, name: m.name, ticked: m.ticked });
 				if (m.ticked) {
 					$scope.mapSelect(m);
 				}
-
 			});
 			$scope.maps = maps;
-			$scope.$apply();
+		}).error(function (reply, status, headers) {
+			$log.error({ reply: reply });
 		});
 
 		$scope.setDisplayMode = function (mode) {
@@ -256,6 +285,7 @@
 			$scope.isAddingLocation = true;
 			$scope.editor.editLocation = {
 				name: "",
+				description: "",
 				coordinates: "",
 				status: "DRAFT",
 				type: "UNSPECIFIED",
@@ -263,6 +293,7 @@
 				period: "ANYTIME",
 				difficulty: null,
 				rating: null,
+				mapId: null
 			};
 			jQuery('#wpme-modal-location').modal('show');
 		}
@@ -271,6 +302,8 @@
 		$scope.onEditLocationClick = function () {
 			$scope.isEditingLocation = true;
 			$scope.editor.editLocation = {
+				id: $scope.editor.selectedLocation.id,
+				description: $scope.editor.selectedLocation.description,
 				name: $scope.editor.selectedLocation.name,
 				coordinates: $scope.editor.selectedLocation.coordinates,
 				status: $scope.editor.selectedLocation.status,
@@ -279,43 +312,51 @@
 				period: $scope.editor.selectedLocation.period,
 				difficulty: $scope.editor.selectedLocation.difficulty,
 				rating: $scope.editor.selectedLocation.rating,
+				mapId: $scope.editor.selectedLocation.mapId
 			};
 			jQuery('#wpme-modal-location').modal('show');
 		}
 
 		// Actually modify the location
 		$scope.editLocation = function () {
+			$scope.isSavingLocation = true;
 			$scope.isEditingLocation = false;
-			console.debug($scope.editor.editLocation);
+			$http.post(ajaxurl, { 
+				'action': 'edit_location',
+				'location': angular.toJson($scope.editor.editLocation)
+			}).success(function (reply) {
+				$scope.isSavingLocation = false;
+				var reply = angular.fromJson(reply);
+				if (reply.success) {
+					jQuery('#wpme-modal-location').modal('hide');
+				}
+				else {
+					alert(reply.message);
+				}
+			}).error(function (reply, status, headers) {
+				$log.error({ reply: reply });
+				alert("Error.");
+			});
 		};
 
 		$scope.mapSelect = function (map) {
 			var map = map;
 			if (map.ticked) {
-				$http({ 
-					method: "POST", 
-					url: ajaxurl, 
-					data: {
-						'action': 'load_locations',
-						'term_id': map.id
-					}
+				$http.post( ajaxurl, {
+					action: 'load_locations',
+					term_id: map.id
 				}).success(function (reply) {
-					var data = angular.fromJson(reply);
+					var data = angular.fromJson(reply.data);
 					for (var i in data) {
 						var m = data[i];
 						if (m.coordinates) {
 							var gps = m.coordinates.split(',');
 							$scope.locations[m.id] = {
-								id: m.id,
-								mapId: map.id,
-								mapName: map.name,
-								name: m.name,
-								coordinates: m.coordinates,
-								type: m.type,
-								period: m.period,
-								status: m.status,
-								rating: m.rating,
-								difficulty: m.difficulty,
+								id: m.id, mapId: map.id, mapName: map.name,
+								description: m.description,
+								name: m.name, coordinates: m.coordinates,
+								type: m.type, period: m.period, status: m.status,
+								rating: m.rating, difficulty: m.difficulty,
 								// Extra
 								latlng:  new google.maps.LatLng(gps[0], gps[1]),
 								visible: false
@@ -324,7 +365,7 @@
 							gmap_add($scope.locations[m.id], $scope.displayMode, $scope.markerOnMouseOver, $scope.markerOnMouseOut, $scope.markerOnClick);
 						}
 						else {
-							$log.warn("Location has not coordinates: ", m);
+							$log.warn("Location has not coordinates", m);
 						}
 					}
 					if (!$scope.isFitBounded) {
@@ -332,7 +373,7 @@
 						gmap_fitbounds($scope.locations);
 					}
 				}).error(function (reply, status, headers) {
-					$log.error(method, url, { params: params, data: data, reply: reply });
+					$log.error({ reply: reply });
 				});
 			}
 			else {
