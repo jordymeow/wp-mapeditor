@@ -5,6 +5,7 @@ class Meow_Map_Admin_Editor extends Meow_Map_Editor {
 	public function __construct() {
 		parent::__construct();
 		add_action( 'admin_menu', array( $this, 'admin_menu' ) );
+		add_action( 'wp_ajax_edit_location', array( $this, 'ajax_edit_location' ) );
 		add_action( 'wp_ajax_add_location', array( $this, 'ajax_add_location' ) );
 		add_action( 'wp_ajax_load_locations', array( $this, 'ajax_load_locations' ) );
 		add_action( 'wp_ajax_load_maps', array( $this, 'ajax_load_maps' ) );
@@ -44,6 +45,18 @@ class Meow_Map_Admin_Editor extends Meow_Map_Editor {
 	}
 
 	function ajax_add_location() {
+		$term_id = intval( $_POST['map_id'] );
+		$term_id = intval( $_POST['location'] );
+		global $wpdb;
+		$table = $this->get_db_role();
+		$user_id = get_current_user_id();
+
+		
+
+		wp_die();
+	}
+
+	function ajax_edit_location() {
 		global $wpdb;
 		echo "OH YEAH";
 		wp_die();
@@ -96,9 +109,9 @@ class Meow_Map_Admin_Editor extends Meow_Map_Editor {
 	function map_editor() {
 		?>
 
-<div ng-app="MapEditor">
+<div ng-app="MapEditor" ng-controller="EditorCtrl">
 <p style="position: absolute; margin: 20px; font-size: 14px; font-style: italic;">Loading Google Maps...</p>
-<div ng-controller="EditorCtrl" id="wpme-mapeditor" class="ng-hide" ng-show="gmapLoaded">
+<div id="wpme-mapeditor" class="ng-hide" ng-show="gmapLoaded">
 
 	<nav id="wme-navbar-header" class="navbar navbar-inverse">
 		<div class="container-fluid">
@@ -130,12 +143,12 @@ class Meow_Map_Admin_Editor extends Meow_Map_Editor {
 					<li><a href="#" ng-click="setDisplayMode('period')"><span class="glyphicon glyphicon-tree-conifer"></span> Period</a></li>
 				</ul>
 			</div>
-			<button type="button" class="btn btn-success btn-sm navbar-btn" data-toggle="modal" data-target="#wpme-modal-add-location">
+			<button type="button" class="btn btn-success btn-sm navbar-btn" ng-click="onAddLocationClick()">
 				<span class="glyphicon glyphicon-plus"></span> Location
 			</button>
-			<button type="button" class="btn btn-success btn-sm navbar-btn" data-toggle="modal" data-target="#wpme-modal-add-location">
+<!-- 			<button type="button" class="btn btn-success btn-sm navbar-btn">
 				<span class="glyphicon glyphicon-asterisk"></span>
-			</button>
+			</button> -->
 		</div>
 
 	</nav>
@@ -150,16 +163,16 @@ class Meow_Map_Admin_Editor extends Meow_Map_Editor {
 			Rating: {{editor.selectedLocation.rating}}<br />
 			Difficulty: {{editor.selectedLocation.difficulty}}<br />
 		</div>
-		<button type="button" class="btn btn-primary btn-sm navbar-btn" data-toggle="modal" data-target="#wpme-modal-add-location">
+		<button type="button" class="btn btn-primary btn-sm navbar-btn" ng-click="onEditLocationClick()">
 			<span class="glyphicon glyphicon-pencil"></span>
 		</button>
-		<button type="button" class="btn btn-primary btn-sm navbar-btn" data-toggle="modal" data-target="#wpme-modal-add-location">
+		<button type="button" class="btn btn-primary btn-sm navbar-btn">
 			<span class="glyphicon glyphicon glyphicon-move"></span>
 		</button>
-		<button type="button" class="btn btn-success btn-sm" data-toggle="modal" data-target="#wpme-modal-add-location">
+		<button type="button" class="btn btn-success btn-sm">
 			<span class="glyphicon glyphicon-asterisk"></span>
 		</button>
-		<button type="button" class="btn btn-danger btn-sm" data-toggle="modal" data-target="#wpme-modal-add-location">
+		<button type="button" class="btn btn-danger btn-sm">
 			<span class="glyphicon glyphicon-trash"></span>
 		</button>
 	</div>
@@ -173,22 +186,70 @@ class Meow_Map_Admin_Editor extends Meow_Map_Editor {
 
 </div>
 
-<div class="modal fade" id="wpme-modal-add-location" >
+<div class="modal fade" id="wpme-modal-location">
 	<div class="modal-dialog">
 		<div class="modal-content">
-			<div class="modal-header">
-				<button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-				<h4 class="modal-title">Add Location</h4>
-			</div>
 			<div class="modal-body">
-				<p>One fine body&hellip;</p>
+				<button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+				<h4 style="margin-top: 0px;">Location</h4>
+				<form>
+					<div class="form-group">
+						<input type="text" class="form-control" id="name" placeholder="Name" ng-model="editor.editLocation.name">
+					</div>
+					<div class="form-group">
+						<input type="text" class="form-control" id="coordinates" placeholder="GPS Coordinates" ng-model="editor.editLocation.coordinates">
+					</div>
+					<div class="form-group">
+						<div class="row">
+							<div class="col-md-6">
+								<select id="status" class="form-control">
+									<option>STATUS</option>
+								</select>
+							</div>
+							<div class="col-md-6">
+								<select id="status" class="form-control">
+									<option>TYPE</option>
+								</select>
+							</div>
+						</div>
+					</div>
+					<div class="form-group">
+						<textarea class="form-control" id="description" rows="3" placeholder="Description" ng-model="editor.editLocation.description"></textarea>
+					</div>
+					<div class="form-group">
+						<div class="row">
+							<div class="col-md-4">
+								<select id="status" class="form-control">
+									<option>PERIOD</option>
+								</select>
+							</div>
+							<div class="col-md-4">
+								<select id="status" class="form-control">
+									<option>DIFFICULTY</option>
+								</select>
+							</div>
+							<div class="col-md-4">
+								<select id="status" class="form-control">
+									<option>RATING</option>
+								</select>
+							</div>
+						</div>
+					</div>
+				</form>
 			</div>
 			<div class="modal-footer">
-				<button type="button" class="btn btn-primary">Add</button>
+				<button type="button" ng-click="editLocation()" class="btn btn-primary pull-right"><span class="glyphicon glyphicon-pen"></span> Modify</button>
+				<button type="button" ng-click="onAdd()" class="btn btn-primary pull-right"><span class="glyphicon glyphicon-plus"></span> Add</button>
+				<div class="form-group pull-right">
+					<select id="map" class="form-control" style="margin: 3px 13px 3px 0px; width: 200px;">
+						<option>MAP 1</option>
+					</select>
+				</div>
 			</div>
 		</div><!-- /.modal-content -->
 	</div><!-- /.modal-dialog -->
 </div><!-- /.modal -->
+
 </div>
 
 		<?php

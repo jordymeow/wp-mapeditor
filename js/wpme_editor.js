@@ -121,7 +121,6 @@
 				location.marker.setIcon(icon_pin);
 		}
 		else {
-			console.debug("gmap_setLocationIcon: could not find", mode, location.status);
 			location.marker.setIcon(icon_pin_exclamation);
 		}
 	}
@@ -151,7 +150,7 @@
 		});
 	}
 
-	function gmap_center(locations) {
+	function gmap_fitbounds(locations) {
 		var bounds = new google.maps.LatLngBounds();;
 		for (var i in locations) {
 			if (locations[i] && locations[i].latlng) {
@@ -172,17 +171,21 @@
 			EDITOR CONTROLLER
 	**************************************************************************************************/
 
-	function EditorCtrl($scope, $location, $timeout, $filter) {
+	function EditorCtrl($scope, $location, $timeout, $filter, $log) {
 		$scope.maps = [];
 		$scope.selectedMaps = [];
 		$scope.locations = {};
 		$scope.locationsCount = 0;
 		$scope.gmapLoaded = false;
 		$scope.displayMode = 'status';
+		$scope.isFitBounded = false;
+		$scope.isAddingLocation = false;
+		$scope.isModifyingLocation = false;
 
 		$scope.editor = {
 			hoveredLocation: null,
 			selectedLocation: null,
+			editLocation: null, // location being edited
 			distanceFromSelected: null
 		};
 
@@ -248,37 +251,88 @@
 			$scope.$apply();
 		}
 
+		// Display the popup
+		$scope.onAddLocationClick = function () {
+			$scope.isAddingLocation = true;
+			$scope.editor.editLocation = {
+				name: "",
+				coordinates: "",
+				status: "DRAFT",
+				type: "UNSPECIFIED",
+				description: "",
+				period: "ANYTIME",
+				difficulty: null,
+				rating: null,
+			};
+			jQuery('#wpme-modal-location').modal('show');
+		}
+
+		// Display the popup
+		$scope.onEditLocationClick = function () {
+			$scope.isEditingLocation = true;
+			$scope.editor.editLocation = {
+				name: $scope.editor.selectedLocation.name,
+				coordinates: $scope.editor.selectedLocation.coordinates,
+				status: $scope.editor.selectedLocation.status,
+				type: $scope.editor.selectedLocation.type,
+				description: $scope.editor.selectedLocation.description,
+				period: $scope.editor.selectedLocation.period,
+				difficulty: $scope.editor.selectedLocation.difficulty,
+				rating: $scope.editor.selectedLocation.rating,
+			};
+			jQuery('#wpme-modal-location').modal('show');
+		}
+
+		// Actually modify the location
+		$scope.editLocation = function () {
+			$scope.isEditingLocation = false;
+			console.debug($scope.editor.editLocation);
+		};
+
 		$scope.mapSelect = function (map) {
 			var map = map;
 			if (map.ticked) {
-				jQuery.post( ajaxurl, {
-					'action': 'load_locations',
-					'term_id': map.id
-				}, 
-				function(response) {
-					var data = angular.fromJson(response);
+				$http({ 
+					method: "POST", 
+					url: ajaxurl, 
+					data: {
+						'action': 'load_locations',
+						'term_id': map.id
+					}
+				}).success(function (reply) {
+					var data = angular.fromJson(reply);
 					for (var i in data) {
 						var m = data[i];
-						var gps = m.coordinates.split(',');
-						$scope.locations[m.id] = {
-							// From Data
-							id: m.id,
-							mapId: map.id,
-							mapName: map.name,
-							name: m.name,
-							coordinates: m.coordinates,
-							type: m.type,
-							period: m.period,
-							status: m.status,
-							rating: m.rating,
-							difficulty: m.difficulty,
-							// Extra
-							latlng:  new google.maps.LatLng(gps[0], gps[1]),
-							visible: false
-						};
-						gmap_add($scope.locations[m.id], $scope.displayMode, $scope.markerOnMouseOver, $scope.markerOnMouseOut, $scope.markerOnClick);
+						if (m.coordinates) {
+							var gps = m.coordinates.split(',');
+							$scope.locations[m.id] = {
+								id: m.id,
+								mapId: map.id,
+								mapName: map.name,
+								name: m.name,
+								coordinates: m.coordinates,
+								type: m.type,
+								period: m.period,
+								status: m.status,
+								rating: m.rating,
+								difficulty: m.difficulty,
+								// Extra
+								latlng:  new google.maps.LatLng(gps[0], gps[1]),
+								visible: false
+							};
+							$scope.locationsCount++;
+							gmap_add($scope.locations[m.id], $scope.displayMode, $scope.markerOnMouseOver, $scope.markerOnMouseOut, $scope.markerOnClick);
+						}
+						else {
+							$log.warn("Location has not coordinates: ", m);
+						}
 					}
-					gmap_center($scope.locations);
+					if (!$scope.isFitBounded) {
+						$scope.isFitBounded = true;
+						gmap_fitbounds($scope.locations);
+					}
+				}).error(function (reply, status, headers) {
+					$log.error(method, url, { params: params, data: data, reply: reply });
 				});
 			}
 			else {
@@ -287,10 +341,11 @@
 					if (m && m.mapId == map.id) {
 						gmap_remove($scope.locations[m.id]);
 						delete $scope.locations[m.id];
+						$scope.locationsCount--;
 					}
-					if (!m) {
-						console.debug(m);
-					}
+				}
+				if (!$scope.locationsCount) {
+					$scope.isFitBounded = false;
 				}
 			}
 		};
