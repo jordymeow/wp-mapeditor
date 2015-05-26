@@ -44,6 +44,7 @@ class Meow_Map_Admin_Tools extends Meow_Map_Admin_Editor {
 				if ( get_transient( $trans ) )
 					continue;
 				echo "Will add " . $location['Name'] . "<br />";
+				
 				$post_id = wp_insert_post( array(
 					'post_title' => $location['Name'],
 					'post_content' => $location['Name'],
@@ -72,6 +73,7 @@ class Meow_Map_Admin_Tools extends Meow_Map_Admin_Editor {
 					echo "Added: " . $location['Name'] . "<br />";
 					set_transient( $trans, 60 * 60 * 24 );
 				}
+				
 			}
 
 			echo "Finished!<br />";

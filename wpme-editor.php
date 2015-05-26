@@ -52,15 +52,15 @@ class Meow_Map_Admin_Editor extends Meow_Map_Editor {
 		wp_enqueue_style( 'wpme-editor-css' );
 	}
 
-	function user_has_role_for_map($map_id) {
+	function user_has_role_for_map( $map_id ) {
 		global $wpdb;
 		$user_id = get_current_user_id();
 		$table = $this->get_db_role();
-		$count = $wpdb->get_var( $wpdb->prepare( "SELECT COUNT(*) FROM $table r WHERE r.user_id = %d AND r.term_id = %d", $user_id, $map_id ), OBJECT );
+		$count = $wpdb->get_var( $wpdb->prepare( "SELECT COUNT(*) FROM $table r WHERE r.user_id = %d AND r.term_id = %d", $user_id, $map_id ) );
 		return $count > 0;
 	}
 
-	function user_has_role_for_location($id) {
+	function user_has_role_for_location( $id ) {
 		global $wpdb;
 		$user_id = get_current_user_id();
 		$table = $this->get_db_role();
@@ -70,16 +70,31 @@ class Meow_Map_Admin_Editor extends Meow_Map_Editor {
 	}
 
 	function ajax_add_location() {
-		$location = json_decode( $_POST['location'] );
-
+		$location = json_decode( stripslashes( $_POST['location'] ) );
 		if ( empty( $location ) ) {
 			echo json_encode( array( 'success' => false, 'message' => "No location information." ) );
 			wp_die();
 		}
 		global $wpdb;
 		if ( $this->user_has_role_for_map( $location->mapId ) ) {
-			$row = $wpdb->get_row( $wpdb->prepare( "SELECT * FROM $wpdb->posts p WHERE p.ID = %d", $location->id ), OBJECT );
-			//echo json_encode( array( 'success' => true, 'data': $location ) );
+			$location->id = wp_insert_post( array(
+				'post_title' => $location->name,
+				'post_content' => $location->description,
+				'post_status' => "publish",
+				'post_type' => "location",
+			), true );
+			if ( is_wp_error( $location->id ) ) {
+				echo json_encode( array( 'success' => false, 'data' => $post_id->get_error_message() ) );
+				die;
+			}
+			wp_set_object_terms( $location->id, (int)$location->mapId, 'map' );
+			$this->update_meta( $location->id, 'wme_type', $location->type );
+			$this->update_meta( $location->id, 'wme_period', $location->period );
+			$this->update_meta( $location->id, 'wme_status', $location->status );
+			$this->update_meta( $location->id, 'wme_rating', $location->rating );
+			$this->update_meta( $location->id, 'wme_coordinates', $location->coordinates );
+			$this->update_meta( $location->id, 'wme_difficulty', $location->difficulty );
+			echo json_encode( array( 'success' => true, 'data' => $location ) );
 			wp_die();
 		}
 		else {
@@ -102,21 +117,17 @@ class Meow_Map_Admin_Editor extends Meow_Map_Editor {
 			),
 			array( 'ID' => $location->id ), 
 			array( '%s', '%s' ), array( '%d' ) );
-			if ( $result > 0 ) {
-				$this->update_meta( $location->id, 'wme_type', $location->type );
-				$this->update_meta( $location->id, 'wme_period', $location->period );
-				$this->update_meta( $location->id, 'wme_status', $location->status );
-				$this->update_meta( $location->id, 'wme_rating', $location->rating );
-				$this->update_meta( $location->id, 'wme_coordinates', $location->coordinates );
-				$this->update_meta( $location->id, 'wme_difficulty', $location->difficulty );
-				echo json_encode( array( 'success' => true, 'data' => $location ) );
-			}
-			else
-				echo json_encode( array( 'success' => false, 'message' => "An error occurred." ) );
+			$this->update_meta( $location->id, 'wme_type', $location->type );
+			$this->update_meta( $location->id, 'wme_period', $location->period );
+			$this->update_meta( $location->id, 'wme_status', $location->status );
+			$this->update_meta( $location->id, 'wme_rating', $location->rating );
+			$this->update_meta( $location->id, 'wme_coordinates', $location->coordinates );
+			$this->update_meta( $location->id, 'wme_difficulty', $location->difficulty );
+			echo json_encode( array( 'success' => true, 'data' => $location ) );
 			wp_die();
 		}
 		else {
-			echo json_encode( array( 'success' => false, 'message' => "You have no access to this map." ) );
+			echo json_encode( array( 'success' => false, 'message' => "You have no right to modify this location." ) );
 			wp_die();
 		}
 	}
@@ -297,11 +308,12 @@ class Meow_Map_Admin_Editor extends Meow_Map_Editor {
 				</form>
 			</div>
 			<div class="modal-footer">
-				<button type="button" ladda="isSavingLocation" ng-click="editLocation()" class="btn btn-primary pull-right"><span class="glyphicon glyphicon-pen"></span> Modify</button>
-				<button type="button" ladda="isSavingLocation" ng-click="onAdd()" class="btn btn-primary pull-right"><span class="glyphicon glyphicon-plus"></span> Add</button>
-				<div class="form-group pull-right">
-					<select id="map" class="form-control" style="margin: 3px 13px 3px 0px; width: 200px;">
-						<option>MAP 1</option>
+				<button ng-show="isEditingLocation" type="button" ladda="isSavingLocation" ng-click="editLocation()" class="btn btn-primary pull-right"><span class="glyphicon glyphicon-pen"></span> Modify</button>
+				<button ng-show="isAddingLocation" type="button" ladda="isSavingLocation" ng-click="addLocation()" class="btn btn-primary pull-right"><span class="glyphicon glyphicon-plus"></span> Add</button>
+				<div ng-show="isAddingLocation" class="form-group pull-right">
+					<select id="map" class="form-control" 
+						ng-options="r.id as r.name for r in maps" ng-model="editor.editLocation.mapId"
+						style="margin: 3px 13px 3px 0px; width: 200px;">
 					</select>
 				</div>
 			</div>
