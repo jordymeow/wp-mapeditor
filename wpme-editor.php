@@ -7,6 +7,7 @@ class Meow_Map_Admin_Editor extends Meow_Map_Editor {
 		add_action( 'admin_menu', array( $this, 'admin_menu' ) );
 		add_action( 'wp_ajax_edit_location', array( $this, 'ajax_edit_location' ) );
 		add_action( 'wp_ajax_add_location', array( $this, 'ajax_add_location' ) );
+		add_action( 'wp_ajax_delete_location', array( $this, 'ajax_delete_location' ) );
 		add_action( 'wp_ajax_load_locations', array( $this, 'ajax_load_locations' ) );
 		add_action( 'wp_ajax_load_maps', array( $this, 'ajax_load_maps' ) );
 		add_filter( 'list_terms_exclusions', array( $this, 'list_terms_exclusions' ), 10, 2 );
@@ -101,6 +102,27 @@ class Meow_Map_Admin_Editor extends Meow_Map_Editor {
 			echo json_encode( array( 'success' => false, 'message' => "You have no access to this map." ) );
 			wp_die();
 		}
+	}
+
+	function ajax_delete_location() {
+		$id = intval( stripslashes( $_POST['id'] ) );
+		if ( empty( $id ) ) {
+			echo json_encode( array( 'success' => false, 'message' => "No location information." ) );
+			wp_die();
+		}
+		if ( !$this->user_has_role_for_location( $id ) ) {
+			echo json_encode( array( 'success' => false, 'message' => "You have no right to delete this location." ) );
+			wp_die();
+		}
+		wp_delete_post( $id );
+		delete_post_meta( $id, 'wme_type' );
+		delete_post_meta( $id, 'wme_period' );
+		delete_post_meta( $id, 'wme_status' );
+		delete_post_meta( $id, 'wme_rating' );
+		delete_post_meta( $id, 'wme_coordinates' );
+		delete_post_meta( $id, 'wme_difficulty' );
+		echo json_encode( array( 'success' => true ) );
+		wp_die();
 	}
 
 	function ajax_edit_location() {
@@ -242,7 +264,7 @@ class Meow_Map_Admin_Editor extends Meow_Map_Editor {
 		<button type="button" class="btn btn-success btn-sm">
 			<span class="glyphicon glyphicon-asterisk"></span>
 		</button>
-		<button type="button" class="btn btn-danger btn-sm">
+		<button type="button" class="btn btn-danger btn-sm" ng-click="deleteLocation()">
 			<span class="glyphicon glyphicon-trash"></span>
 		</button>
 	</div>

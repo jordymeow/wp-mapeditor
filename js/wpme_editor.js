@@ -413,7 +413,6 @@
 		// Actually modify the location
 		$scope.editLocation = function () {
 			$scope.isSavingLocation = true;
-			$scope.isEditingLocation = false;
 			$http.post(ajaxurl, { 
 				'action': 'edit_location',
 				'location': angular.toJson($scope.editor.editLocation)
@@ -428,6 +427,31 @@
 					alert(reply.message);
 				}
 			}).error(function (reply, status, headers) {
+				$log.error({ reply: reply });
+				alert("Error.");
+			});
+		};
+
+		// Actually modify the location
+		$scope.deleteLocation = function () {
+			$scope.isSavingLocation = true;
+			$http.post(ajaxurl, { 
+				'action': 'delete_location',
+				'id': $scope.editor.selectedLocation.id
+			}).success(function (reply) {
+				$scope.isSavingLocation = false;
+				var reply = angular.fromJson(reply);
+				if (reply.success) {
+					gmap_remove($scope.locations[$scope.editor.selectedLocation.id]);
+					delete $scope.locations[$scope.editor.selectedLocation.id];
+					$scope.locationsCount--;
+					jQuery('#wpme-modal-location').modal('hide');
+				}
+				else {
+					alert(reply.message);
+				}
+			}).error(function (reply, status, headers) {
+				$scope.isSavingLocation = false;
 				$log.error({ reply: reply });
 				alert("Error.");
 			});

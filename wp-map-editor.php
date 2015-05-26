@@ -36,6 +36,25 @@ class Meow_Map_Editor {
 	}
 
 	/******************************
+		FUNCTIONS
+	******************************/
+
+	function update_meta( $post_id, $meta_key, $new_value ) {
+		$new_value = trim( $new_value );
+		$old_value = get_post_meta( $post_id, $meta_key, true );
+		if ( $new_value == '' )
+			return;
+		else if ( $old_value == '' && $new_value )
+			add_post_meta( $post_id, $meta_key, $new_value, true );
+		else if ( $old_value != $new_value )
+			update_post_meta( $post_id, $meta_key, $new_value );
+		/*
+		else if ( $new_value == '' && $old_value )
+		  delete_post_meta( $post_id, $meta_key, $old_value );
+		*/
+	}
+
+	/******************************
 		MAINTAIN AUTHOR FOR MAPS
 	******************************/
 

@@ -11,21 +11,6 @@ class Meow_Map_Admin_Tools extends Meow_Map_Admin_Editor {
 		$submenu = add_submenu_page( 'edit.php?post_type=location', 'Tools', 'Tools', 'edit_maps', 'map_tools', array( $this, 'map_tools' ) );
 	}
 
-	function update_meta( $post_id, $meta_key, $new_value ) {
-		$new_value = trim( $new_value );
-		$old_value = get_post_meta( $post_id, $meta_key, true );
-		if ( $new_value == '' )
-			return;
-		else if ( $old_value == '' && $new_value )
-			add_post_meta( $post_id, $meta_key, $new_value, true );
-		else if ( $old_value != $new_value )
-			update_post_meta( $post_id, $meta_key, $new_value );
-		/*
-		else if ( $new_value == '' && $old_value )
-		  delete_post_meta( $post_id, $meta_key, $old_value );
-		*/
-	}
-
 	function map_tools() {
 		$action = isset ( $_POST[ 'submit' ] ) ? $_POST[ 'submit' ] : null;
 		$term = isset ( $_POST[ 'term' ] ) ? $_POST[ 'term' ] : null;
