@@ -260,16 +260,19 @@ class Meow_Map_Admin_Editor extends Meow_Map_Editor {
 			Rating: {{editor.selectedLocation.rating}}<br />
 			Difficulty: {{editor.selectedLocation.difficulty}}<br />
 		</div>
-		<button type="button" class="btn btn-primary btn-sm navbar-btn" ng-click="onEditLocationClick()">
+		<button ladda="isSavingLocation" ng-disabled="isDragging" type="button" class="btn btn-primary btn-sm navbar-btn" ng-click="onEditLocationClick()">
 			<span class="glyphicon glyphicon-pencil"></span>
 		</button>
-		<button type="button" class="btn btn-primary btn-sm navbar-btn">
+		<button ladda="isSavingLocation" ng-hide="isDragging" type="button" class="btn btn-primary btn-sm navbar-btn" ng-click="startDraggable()">
 			<span class="glyphicon glyphicon glyphicon-move"></span>
 		</button>
-		<button type="button" class="btn btn-success btn-sm">
+		<button ladda="isSavingLocation" ng-show="isDragging" type="button" class="btn btn-primary btn-sm navbar-btn" ng-click="saveDraggable()">
+			<span class="glyphicon glyphicon glyphicon-ok"></span>
+		</button>
+		<button ladda="isSavingLocation" ng-disabled="isDragging" type="button" class="btn btn-success btn-sm">
 			<span class="glyphicon glyphicon-asterisk"></span>
 		</button>
-		<button type="button" class="btn btn-danger btn-sm" ng-click="deleteLocation()">
+		<button ladda="isSavingLocation" ng-disabled="isDragging" type="button" class="btn btn-danger btn-sm" ng-click="deleteLocation()">
 			<span class="glyphicon glyphicon-trash"></span>
 		</button>
 	</div>

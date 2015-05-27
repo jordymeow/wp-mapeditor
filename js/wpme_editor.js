@@ -49,6 +49,7 @@
 	var icon_pin;
 	var icon_pin_selected;
 	var icon_pin_exclamation;
+	var icon_pin_draggable;
 	var statuses = [ 'CHECKED', 'OK', 'MISLOCATED', 'DRAFT', 'UNAVAILABLE' ];
 	var types = [ 'ENTERTAINMENT', 'FACTORY', 'HOSPITAL', 'HOTEL', 'HOUSE', 'LANDSCAPE', 'INDUSTRIAL', 'MILITARY', 'OFFICE', 'RELIGION', 'SCHOOL', 'UNSPECIFIED', 'RUIN', 'UNAVAILABLE' ];
 	var periods = [ 'ANYTIME', 'SPRING', 'SUMMER', 'AUTUMN', 'WINTER' ];
@@ -82,7 +83,12 @@
 			url: plugin_url + '/icons/exclamation.png',
 			size: new google.maps.Size(24, 24),
 			scaledSize: new google.maps.Size(24, 24)
-		};	
+		};
+		icon_pin_draggable = {
+			url: plugin_url + '/icons/draggable.png',
+			size: new google.maps.Size(24, 24),
+			scaledSize: new google.maps.Size(24, 24)
+		};
 		for (var i in statuses) {
 			var st = statuses[i];
 			icons_status[st] = {
@@ -148,6 +154,31 @@
 		else {
 			location.marker.setIcon(icon_pin_exclamation);
 		}
+	}
+
+	function gmap_bounce(location) {
+		location.marker.setAnimation(google.maps.Animation.BOUNCE);
+		setTimeout(function() {
+			location.marker.setAnimation(null); 
+		}, 750);
+	}
+
+	function gmap_setDraggable(location, mode, isTrue, fn) {
+		if (!location) {
+			console.debug("Location is null.");
+		}
+		if (isTrue) {
+			location.marker.setIcon(icon_pin_draggable);
+			location.marker.listenerDrag = google.maps.event.addListener(location.marker, 'dragend', function() {
+				var latlng = location.marker.getPosition();
+				fn(latlng.lat() + "," + latlng.lng(), latlng);
+			});
+		}
+		else {
+			gmap_setLocationIcon(location, mode);
+			google.maps.event.removeListener(location.marker.listenerDrag);
+		}
+		location.marker.setDraggable(isTrue);
 	}
 
 	function gmap_update(location, mode) {
@@ -272,11 +303,51 @@
 			}
 		};
 
+		$scope.startDraggable = function () {
+			copyEditLocation();
+			$scope.isDragging = true;
+			gmap_setDraggable($scope.editor.selectedLocation, $scope.displayMode, true, function (coordinates, latlng) {
+				$scope.editor.editLocation.coordinates = coordinates;
+				$scope.editor.editLocation.latlng = latlng;
+				$scope.$apply();
+			});
+		}
+
+		$scope.saveDraggable = function () {
+			gmap_setDraggable($scope.editor.selectedLocation, $scope.displayMode);
+			$scope.isSavingLocation = true;
+			$http.post(ajaxurl, { 
+				'action': 'edit_location',
+				'location': angular.toJson($scope.editor.editLocation)
+			}).success(function (reply) {
+				$scope.isSavingLocation = false;
+				$scope.isDragging = false;
+				var reply = angular.fromJson(reply);
+				if (reply.success) {
+					$scope.updateLocation(reply.data);
+				}
+				else {
+					alert(reply.message);
+				}
+			}).error(function (reply, status, headers) {
+				$scope.isSavingLocation = false;
+				$scope.isDragging = false;
+				$log.error({ reply: reply });
+				alert("Error.");
+			});
+
+		}
+
 		$scope.mapOnClick = function () {
 			if ($scope.editor.selectedLocation) {
+				if ($scope.isDragging) {
+					gmap_update($scope.editor.selectedLocation); // Need to reset the location
+					$scope.isDragging = false;
+				}
 				$scope.editor.selectedLocation.selected = false;
 				gmap_setLocationIcon($scope.editor.selectedLocation, $scope.displayMode);
 				$scope.editor.selectedLocation = null;
+				$scope.$apply();
 			}
 		}
 
@@ -297,10 +368,7 @@
 		}
 
 		$scope.markerOnClick = function (location) {
-			if ($scope.editor.selectedLocation) {
-				$scope.editor.selectedLocation.selected = false;
-				gmap_setLocationIcon($scope.editor.selectedLocation, $scope.displayMode);
-			}
+			$scope.mapOnClick();
 			$scope.editor.selectedLocation = location;
 			$scope.editor.selectedLocation.selected = true;
 			gmap_setLocationIcon($scope.editor.selectedLocation, $scope.displayMode);
@@ -338,7 +406,7 @@
 				$scope.isSavingLocation = false;
 				var reply = angular.fromJson(reply);
 				if (reply.success) {
-					$scope.locationSet(reply.data);
+					$scope.updateLocation(reply.data);
 					jQuery('#wpme-modal-location').modal('hide');
 				}
 				else {
@@ -352,10 +420,7 @@
 			});
 		};
 
-		// Display the popup
-		$scope.onEditLocationClick = function () {
-			$scope.isEditingLocation = true;
-			$scope.isAddingLocation = false;
+		function copyEditLocation() {
 			$scope.editor.editLocation = {
 				id: $scope.editor.selectedLocation.id,
 				description: $scope.editor.selectedLocation.description,
@@ -369,16 +434,25 @@
 				rating: $scope.editor.selectedLocation.rating,
 				mapId: $scope.editor.selectedLocation.mapId
 			};
+		}
+
+		// Display the popup
+		$scope.onEditLocationClick = function () {
+			$scope.isEditingLocation = true;
+			$scope.isAddingLocation = false;
+			copyEditLocation();
 			jQuery('#wpme-modal-location').modal('show');
 		}
 
 		// Update location from a json location from the server
-		$scope.locationSet = function(location) {
+		$scope.updateLocation = function(location) {
 			var isNew = !$scope.locations[location.id];
 			var gps = location.coordinates.split(',');
 			if (location.coordinates && gps.length === 2) {
 				if (isNew) {
-					$scope.locations[location.id] = {};
+					$scope.locations[location.id] = {
+						selected: false
+					};
 				}
 				angular.extend($scope.locations[location.id], {
 					id: location.id, 
@@ -392,10 +466,7 @@
 					status: location.status,
 					rating: location.rating, 
 					difficulty: location.difficulty,
-					// Extra
-					latlng:  new google.maps.LatLng(gps[0], gps[1]),
-					selected: false,
-					visible: false
+					latlng:  new google.maps.LatLng(gps[0], gps[1])
 				});
 				if (isNew) {
 					$scope.locationsCount++;
@@ -420,7 +491,7 @@
 				$scope.isSavingLocation = false;
 				var reply = angular.fromJson(reply);
 				if (reply.success) {
-					$scope.locationSet(reply.data);
+					$scope.updateLocation(reply.data);
 					jQuery('#wpme-modal-location').modal('hide');
 				}
 				else {
@@ -468,7 +539,7 @@
 					var data = angular.fromJson(reply.data);
 					for (var i in data) {
 						var m = data[i];
-						$scope.locationSet(m);
+						$scope.updateLocation(m);
 					}
 					if (!$scope.isFitBounded) {
 						$scope.isFitBounded = true;
