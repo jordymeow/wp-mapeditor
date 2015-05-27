@@ -5,6 +5,7 @@ class Meow_Map_Admin_Editor extends Meow_Map_Editor {
 	public function __construct() {
 		parent::__construct();
 		add_action( 'admin_menu', array( $this, 'admin_menu' ) );
+		add_action( 'delete_post', array( $this, 'delete_post' ) );
 		add_action( 'wp_ajax_edit_location', array( $this, 'ajax_edit_location' ) );
 		add_action( 'wp_ajax_add_location', array( $this, 'ajax_add_location' ) );
 		add_action( 'wp_ajax_delete_location', array( $this, 'ajax_delete_location' ) );
@@ -81,7 +82,7 @@ class Meow_Map_Admin_Editor extends Meow_Map_Editor {
 			$location->id = wp_insert_post( array(
 				'post_title' => $location->name,
 				'post_content' => $location->description,
-				'post_status' => "publish",
+				'post_status' => "draft",
 				'post_type' => "location",
 			), true );
 			if ( is_wp_error( $location->id ) ) {
@@ -114,15 +115,18 @@ class Meow_Map_Admin_Editor extends Meow_Map_Editor {
 			echo json_encode( array( 'success' => false, 'message' => "You have no right to delete this location." ) );
 			wp_die();
 		}
-		wp_delete_post( $id );
+		wp_trash_post( $id );
+		echo json_encode( array( 'success' => true ) );
+		wp_die();
+	}
+
+	function delete_post( $id ) {
 		delete_post_meta( $id, 'wme_type' );
 		delete_post_meta( $id, 'wme_period' );
 		delete_post_meta( $id, 'wme_status' );
 		delete_post_meta( $id, 'wme_rating' );
 		delete_post_meta( $id, 'wme_coordinates' );
 		delete_post_meta( $id, 'wme_difficulty' );
-		echo json_encode( array( 'success' => true ) );
-		wp_die();
 	}
 
 	function ajax_edit_location() {
@@ -190,6 +194,7 @@ class Meow_Map_Admin_Editor extends Meow_Map_Editor {
 			(SELECT meta_value FROM $wpdb->postmeta m WHERE m.post_id = p.ID AND m.meta_key = 'wme_difficulty') difficulty
 			FROM $table r, $wpdb->posts p, $wpdb->term_relationships s
 			WHERE r.user_id = %d
+			AND p.post_status <> 'trash'
 			AND r.term_id = %d
 			AND p.ID = s.object_id
 			AND s.term_taxonomy_id = r.term_id", $user_id, $term_id ), OBJECT );

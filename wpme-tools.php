@@ -33,7 +33,7 @@ class Meow_Map_Admin_Tools extends Meow_Map_Admin_Editor {
 				$post_id = wp_insert_post( array(
 					'post_title' => $location['Name'],
 					'post_content' => $location['Name'],
-					'post_status' => "publish",
+					'post_status' => "draft",
 					//'tax_input' => array( 'map' => 'Untitled' ),
 					'post_type' => "location",
 				), true );
