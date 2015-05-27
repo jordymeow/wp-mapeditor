@@ -69,6 +69,8 @@ class Meow_MapEditor_Server extends Meow_MapEditor {
 	}
 
 	function user_has_role_for_map( $map_id ) {
+		if ( is_super_admin() )
+			return true;
 		global $wpdb;
 		$user_id = get_current_user_id();
 		$table = $this->get_db_role();
@@ -77,11 +79,12 @@ class Meow_MapEditor_Server extends Meow_MapEditor {
 	}
 
 	function user_has_role_for_location( $id ) {
+		if ( is_super_admin() )
+			return true;
 		global $wpdb;
 		$user_id = get_current_user_id();
 		$table = $this->get_db_role();
 		$count = $wpdb->get_var( $wpdb->prepare( "SELECT COUNT(*) FROM $table r, $wpdb->term_relationships rp WHERE r.user_id = %d AND rp.term_taxonomy_id = r.term_id AND rp.object_id = %d", $user_id, $id ) );
-		
 		return $count > 0;
 	}
 
@@ -180,9 +183,9 @@ class Meow_MapEditor_Server extends Meow_MapEditor {
 		$results = $wpdb->get_results( 
 			"SELECT t.term_id id, t.name name, 0 ticked
 			FROM $table r, $wpdb->terms t
-			WHERE r.user_id = $user_id
-			AND r.term_id = t.term_id
-			GROUP BY t.term_id, t.name", OBJECT );
+			WHERE r.term_id = t.term_id"
+			. (!is_super_admin() ? " AND r.user_id = $user_id " : " ")
+			. "GROUP BY t.term_id, t.name", OBJECT );
 		if ( !empty( $lastticked ) )
 			foreach ( $results as $result ) {
 				$result->ticked = false;

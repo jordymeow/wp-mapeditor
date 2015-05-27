@@ -318,14 +318,23 @@ class Meow_MapEditor {
 		
 }
 
-if ( class_exists( 'Meow_MapEditor' ) ) {
-	if ( is_admin() ) {
-		include "editor-server.php";
-		include "admin-tools.php";
-		new Meow_MapEditor_Tools;
-	}
-	else {
-		new Meow_MapEditor;
+add_action( 'plugins_loaded', 'meow_map_editor_init' );
+
+function meow_map_editor_init() {
+	if ( class_exists( 'Meow_MapEditor' ) ) {
+		if ( is_admin() ) {
+			include "editor-server.php";
+			if ( is_super_admin() ) {
+				include "admin-tools.php";
+				new Meow_MapEditor_Tools;
+			}
+			else {
+				new Meow_MapEditor_Server;
+			}
+		}
+		else {
+			new Meow_MapEditor;
+		}
 	}
 }
 

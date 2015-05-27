@@ -147,10 +147,8 @@
 				name: "",
 				description: "",
 				coordinates: gmap.getCenter(),
-				mapId: "",
 				status: "DRAFT",
 				type: "UNSPECIFIED",
-				description: "",
 				period: "ANYTIME",
 				difficulty: null,
 				rating: null,
@@ -230,6 +228,7 @@
 					gmap.remove($scope.locations[$scope.editor.selectedLocation.id]);
 					delete $scope.locations[$scope.editor.selectedLocation.id];
 					$scope.locationsCount--;
+					$scope.editor.selectedLocation = null;
 					jQuery('#wpme-modal-location').modal('hide');
 				}
 				else {
@@ -307,7 +306,6 @@
 				coordinates: $scope.editor.selectedLocation.coordinates,
 				status: $scope.editor.selectedLocation.status,
 				type: $scope.editor.selectedLocation.type,
-				description: $scope.editor.selectedLocation.description,
 				period: $scope.editor.selectedLocation.period,
 				difficulty: $scope.editor.selectedLocation.difficulty,
 				rating: $scope.editor.selectedLocation.rating,

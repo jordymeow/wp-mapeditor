@@ -4,7 +4,13 @@
 
 	<nav id="wme-navbar-header" class="navbar navbar-inverse">
 		<div class="container-fluid">
-			<isteven-multi-select class="btn-sm navbar-btn"
+
+			<div isteven-multi-select class="btn-sm" style="
+					float: left;
+					margin-top: 5px;
+					position: relative;
+					left: -12px;
+					margin-right: -18px;"
 				input-model="maps"
 				output-model="selectedMaps"
 				helper-elements=""
@@ -13,8 +19,9 @@
 				disable-property="disabled"
 				on-item-click="mapSelect(data)"
 				tick-property="ticked">
-			</isteven-multi-select>
-			<div class="btn-group">
+			</div>
+
+			<div class="btn-group" ng-show="selectedMaps.length > 0">
 				<button type="button" class="btn btn-primary btn-sm dropdown-toggle" data-toggle="dropdown" aria-expanded="false">
 					<span ng-if="displayMode === 'status'">
 						<span class="glyphicon glyphicon-flag"></span> Status <span class="caret"></span>
@@ -32,7 +39,7 @@
 					<li><a href="#" ng-click="setDisplayMode('period')"><span class="glyphicon glyphicon-tree-conifer"></span> Period</a></li>
 				</ul>
 			</div>
-			<button type="button" class="btn btn-success btn-sm navbar-btn" ng-click="onAddLocationClick()">
+			<button type="button" ng-show="selectedMaps.length > 0" class="btn btn-success btn-sm navbar-btn" ng-click="onAddLocationClick()">
 				<span class="glyphicon glyphicon-plus"></span> Location
 			</button>
 <!-- 			<button type="button" class="btn btn-success btn-sm navbar-btn">
