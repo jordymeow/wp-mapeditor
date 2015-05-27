@@ -1,6 +1,6 @@
 <?php
 
-class Meow_Map_Admin_Tools extends Meow_Map_Admin_Editor {
+class Meow_MapEditor_Tools extends Meow_MapEditor_Server {
 
 	public function __construct() {
 		parent::__construct();

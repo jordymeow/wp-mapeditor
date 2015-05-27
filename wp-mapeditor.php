@@ -8,17 +8,14 @@ Author: Jordy Meow
 Author URI: http://apps.meow.fr
 */
 
-class Meow_Map_Editor {
+class Meow_MapEditor {
 
 	public function __construct() {
 		add_action( 'init', array( $this, 'init' ) );
 
 		// Metabox (add 'Mistake' in Location + save)
-		//add_filter( 'default_title', array( $this, 'default_title' ), 10, 2 );
 		add_action( 'add_meta_boxes', array( $this, 'add_location_metaboxes' ) );
 		add_action( 'save_post', array( $this, 'save_location_metaboxes' ), 1, 2 );
-
-		// Menu
 	}
 
 	function init() {
@@ -206,9 +203,22 @@ class Meow_Map_Editor {
 	************************/
 
 	function create_roles() {
-		$role = get_role( 'administrator' );
-		foreach ( array('publish','delete','delete_others','delete_private','delete_published','edit','edit_others','edit_private','edit_published','read_private') as $cap ) {
-			$role->add_cap( "{$cap}_maps" );
+		$capabilities = array( 'publish','delete','delete_private','delete_published','edit','edit_private','edit_published','read_private' );
+		
+		// For Map Editor
+		remove_role( "map_editor" );
+		$maprole = add_role( "map_editor" , "Map Editor" );
+		$maprole->add_cap( "read" );
+		$maprole->add_cap( "manage_categories" );
+		foreach ( $capabilities as $cap ) {
+			$maprole->add_cap( "{$cap}_maps" );
+		}
+
+		// For Admin
+		$adminrole = get_role( 'administrator' );
+		$capabilities_admin = array_merge( array( 'edit_others', 'delete_others' ), $capabilities );
+		foreach ( $capabilities_admin as $cap ) {
+			$adminrole->add_cap( "{$cap}_maps" );
 		}
 	}
 
@@ -228,7 +238,7 @@ class Meow_Map_Editor {
 			id BIGINT(20) NOT NULL AUTO_INCREMENT,
 			user_id BIGINT(20) NULL,
 			term_id BIGINT(20) NULL,
-			role TINYINT DEFAULT '6'
+			role TINYINT DEFAULT '6',
 			UNIQUE KEY id (id)
 		);";
 		require_once(ABSPATH . 'wp-admin/includes/upgrade.php');
@@ -308,14 +318,14 @@ class Meow_Map_Editor {
 		
 }
 
-if ( class_exists( 'Meow_Map_Editor' ) ) {
+if ( class_exists( 'Meow_MapEditor' ) ) {
 	if ( is_admin() ) {
-		include "wpme-editor.php";
-		include "wpme-tools.php";
-		new Meow_Map_Admin_Tools;
+		include "editor-server.php";
+		include "admin-tools.php";
+		new Meow_MapEditor_Tools;
 	}
 	else {
-		new Meow_Map_Editor;
+		new Meow_MapEditor;
 	}
 }
 
