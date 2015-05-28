@@ -132,7 +132,7 @@ isteven-multi-select {
 
 #wpme-info {
 	position: fixed;
-	width: 162px;
+	width: 200px;
 	right: 10px;
 	bottom: 10px;
 	background: rgba(255, 255, 255, 0.90);
@@ -145,14 +145,27 @@ isteven-multi-select {
 }
 
 #wpme-info .header {
+	text-align: center;
+	background-color: #282828;
+	margin: -5px -8px 5px -8px;
+	color: #FFF;
 }
 
 #wpme-info .header .name {
-	font-size: 14px;
+	font-weight: bold;
 }
 
-#wpme-info .header .coordinates {
-	font-size: 8px;
+#wpme-info .header .coordinates a {
+	color: #B3B3B3;
+}
+
+#wpme-info .header .coordinates a:hover {
+	color: white;
+	text-decoration: none;
+}
+
+#wpme-info .actions {
+	text-align: center;
 }
 
 .pin {

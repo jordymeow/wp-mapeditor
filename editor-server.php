@@ -215,11 +215,11 @@ class Meow_MapEditor_Server extends Meow_MapEditor {
 			(SELECT meta_value FROM $wpdb->postmeta m WHERE m.post_id = p.ID AND m.meta_key = 'wme_rating') rating,
 			(SELECT meta_value FROM $wpdb->postmeta m WHERE m.post_id = p.ID AND m.meta_key = 'wme_difficulty') difficulty
 			FROM $table r, $wpdb->posts p, $wpdb->term_relationships s
-			WHERE r.user_id = %d
-			AND p.post_status <> 'trash'
+			WHERE p.post_status <> 'trash'
 			AND r.term_id = %d
-			AND p.ID = s.object_id
-			AND s.term_taxonomy_id = r.term_id", $user_id, $term_id ), OBJECT );
+			AND p.ID = s.object_id"
+			. ( is_super_admin() ? "" : " AND r.user_id = %d" )
+			. " AND s.term_taxonomy_id = r.term_id", $term_id, $user_id ), OBJECT );
 		set_transient( "wme_lastticked_" . $user_id, $term_id, 60 * 60 * 24 * 100 );
 		echo json_encode( array( 'success' => true, 'data' => $results ) );
 		wp_die();

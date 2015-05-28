@@ -5,6 +5,10 @@
 	<nav id="wme-navbar-header" class="navbar navbar-inverse">
 		<div class="container-fluid">
 
+			<div style="position: absolute; right: 10px; margin-top: 2px;" class="logo pull-right">
+				<a target="_blank" href="http://www.meow.fr"><img height="42" src="<?php echo plugin_dir_url( __FILE__ ); ?>/icons/jordy-meow.png"></a>
+			</div>
+
 			<button type="button" ladda="isLoadingMap" class="btn btn-primary btn-sm navbar-btn pull-left" ng-click="toggleSelectMode()">
 				<span ng-show="mapSelectMode === 'single'" class="glyphicon glyphicon-map-marker"></span>
 				<span ng-show="mapSelectMode === 'multiple'" class="glyphicon glyphicon-globe"></span>
@@ -55,7 +59,11 @@
 	<div id="wpme-info" class="ng-hide" ng-show="editor.selectedLocation">
 		<div class="header">
 			<span class="name">{{editor.selectedLocation.name}}</span><br />
-			<span class="coordinates">{{editor.selectedLocation.coordinates}}</span>
+			<span class="coordinates">
+				<a target="_blank" href="https://www.google.com/maps/dir//{{editor.selectedLocation.coordinates}}/@{{editor.selectedLocation.coordinates}}">
+					{{editor.selectedLocation.coordinates}}
+				</a>
+			</span>
 		</div>
 		<div class="info">
 			Status: {{editor.selectedLocation.status}}<br />
@@ -63,21 +71,23 @@
 			Rating: {{editor.selectedLocation.rating}}<br />
 			Difficulty: {{editor.selectedLocation.difficulty}}<br />
 		</div>
-		<button ladda="isSavingLocation" ng-disabled="isDragging" type="button" class="btn btn-primary btn-sm navbar-btn" ng-click="onEditLocationClick()">
-			<span class="glyphicon glyphicon-pencil"></span>
-		</button>
-		<button ladda="isSavingLocation" ng-hide="isDragging" type="button" class="btn btn-primary btn-sm navbar-btn" ng-click="startDraggable()">
-			<span class="glyphicon glyphicon glyphicon-move"></span>
-		</button>
-		<button ladda="isSavingLocation" ng-show="isDragging" type="button" class="btn btn-primary btn-sm navbar-btn" ng-click="saveDraggable()">
-			<span class="glyphicon glyphicon glyphicon-ok"></span>
-		</button>
-		<button ladda="isSavingLocation" ng-disabled="isDragging" type="button" class="btn btn-success btn-sm">
-			<span class="glyphicon glyphicon-asterisk"></span>
-		</button>
-		<button ladda="isSavingLocation" ng-disabled="isDragging" type="button" class="btn btn-danger btn-sm" ng-click="deleteLocation()">
-			<span class="glyphicon glyphicon-trash"></span>
-		</button>
+		<div class="actions">
+			<button ladda="isSavingLocation" ng-disabled="isDragging" type="button" class="btn btn-primary btn-sm navbar-btn" ng-click="onEditLocationClick()">
+				<span class="glyphicon glyphicon-pencil"></span>
+			</button>
+			<button ladda="isSavingLocation" ng-hide="isDragging" type="button" class="btn btn-primary btn-sm navbar-btn" ng-click="startDraggable()">
+				<span class="glyphicon glyphicon glyphicon-move"></span>
+			</button>
+			<button ladda="isSavingLocation" ng-show="isDragging" type="button" class="btn btn-primary btn-sm navbar-btn" ng-click="saveDraggable()">
+				<span class="glyphicon glyphicon glyphicon-ok"></span>
+			</button>
+			<button ladda="isSavingLocation" ng-disabled="isDragging" type="button" class="btn btn-success btn-sm">
+				<span class="glyphicon glyphicon-asterisk"></span>
+			</button>
+			<button ladda="isSavingLocation" ng-disabled="isDragging" type="button" class="btn btn-danger btn-sm" ng-click="deleteLocation()">
+				<span class="glyphicon glyphicon-trash"></span>
+			</button>
+		</div>
 	</div>
 	<div id="wpme-map"></div>
 	<nav id="wme-navbar-footer">

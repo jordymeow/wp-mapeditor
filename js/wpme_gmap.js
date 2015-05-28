@@ -36,21 +36,25 @@
 			});
 			icon_pin = {
 				url: w.gmap.plugdir + 'icons/pin.png',
+				anchor: new google.maps.Point(10, 10),
 				size: new google.maps.Size(size, size),
 				scaledSize: new google.maps.Size(scaledSize, scaledSize)
 			};
 			icon_pin_selected = {
 				url: w.gmap.plugdir + 'icons/selected.png',
+				anchor: new google.maps.Point(10, 10),
 				size: new google.maps.Size(size, size),
 				scaledSize: new google.maps.Size(scaledSize, scaledSize)
 			};
 			icon_pin_exclamation = {
 				url: w.gmap.plugdir + 'icons/exclamation.png',
+				anchor: new google.maps.Point(10, 10),
 				size: new google.maps.Size(size, size),
 				scaledSize: new google.maps.Size(scaledSize, scaledSize)
 			};
 			icon_pin_draggable = {
 				url: w.gmap.plugdir + 'icons/draggable.png',
+				anchor: new google.maps.Point(10, 10),
 				size: new google.maps.Size(size, size),
 				scaledSize: new google.maps.Size(scaledSize, scaledSize)
 			};
@@ -58,6 +62,7 @@
 				var st = w.gmap.statuses[i];
 				icons_status[st] = {
 					url: w.gmap.plugdir + 'icons/' + st + '.png',
+					anchor: new google.maps.Point(10, 10),
 					size: new google.maps.Size(size, size),
 					scaledSize: new google.maps.Size(scaledSize, scaledSize)
 				};

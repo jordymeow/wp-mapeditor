@@ -174,13 +174,13 @@
 			$scope.editor.editLocation = {
 				name: "",
 				description: "",
-				coordinates: gmap.getCenter(),
+				coordinates: roundCoordinates(gmap.getCenter()),
 				status: "DRAFT",
 				type: "UNSPECIFIED",
 				period: "ANYTIME",
 				difficulty: null,
 				rating: null,
-				mapId: parseInt($scope.mostRecentMapId)
+				mapId: $scope.mostRecentMapId
 			};
 			jQuery('#wpme-modal-location').modal('show');
 		}
@@ -277,7 +277,7 @@
 			copyEditLocation();
 			$scope.isDragging = true;
 			gmap.setDraggable($scope.editor.selectedLocation, $scope.displayMode, true, function (coordinates, latlng) {
-				$scope.editor.editLocation.coordinates = coordinates;
+				$scope.editor.editLocation.coordinates = roundCoordinates(coordinates);
 				$scope.editor.editLocation.latlng = latlng;
 				$scope.$apply();
 			});
@@ -328,6 +328,15 @@
 			GENERAL FUNCTIONS
 		**************************************************************************************************/
 
+		var roundCoordinates = function (coordinates) {
+			if (!coordinates)
+				return null;
+			var gps = coordinates.split(',');
+			if (gps.length !== 2)
+				return null;
+			return parseFloat(gps[0]).toFixed(4) + "," + parseFloat(gps[1]).toFixed(4);
+		}
+
 		function copyEditLocation() {
 			$scope.editor.editLocation = {
 				id: $scope.editor.selectedLocation.id,
@@ -365,12 +374,12 @@
 					};
 				}
 				angular.extend($scope.locations[location.id], {
-					id: parseInt(location.id), 
-					mapId: parseInt(map.id), 
+					id: location.id, 
+					mapId: map.id, 
 					mapName: map.name,
 					description: location.description,
 					name: location.name, 
-					coordinates: location.coordinates,
+					coordinates: roundCoordinates(location.coordinates),
 					type: location.type, 
 					period: location.period, 
 					status: location.status,
