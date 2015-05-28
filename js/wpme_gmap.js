@@ -29,7 +29,8 @@
 			map = new google.maps.Map(document.getElementById(div), {
 				mapTypeId: google.maps.MapTypeId.TERRAIN,
 				center: { lat: 35.682839, lng: 139.682600 },
-				zoom: 8
+				zoom: 8,
+				minZoom: 2
 			});
 			google.maps.event.addListener(map, 'click', function() {
 				click();
