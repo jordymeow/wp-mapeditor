@@ -108,7 +108,8 @@
 		function mapClear(map) {
 			for (var i in $scope.locations) {
 				var loc = $scope.locations[i];
-				if (loc && (!map || loc.mapId === map.id)) {
+				console.debug($scope.mapSelectMode, map);
+				if (loc && (!map || parseInt(loc.mapId) === parseInt(map.id))) {
 					gmap.remove(loc);
 					delete $scope.locations[i];
 					$scope.locationsCount--;
