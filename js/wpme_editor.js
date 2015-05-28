@@ -108,7 +108,6 @@
 		function mapClear(map) {
 			for (var i in $scope.locations) {
 				var loc = $scope.locations[i];
-				console.debug($scope.mapSelectMode, map);
 				if (loc && (!map || parseInt(loc.mapId) === parseInt(map.id))) {
 					gmap.remove(loc);
 					delete $scope.locations[i];
@@ -385,7 +384,7 @@
 					status: location.status,
 					rating: location.rating, 
 					difficulty: location.difficulty,
-					latlng:  new google.maps.LatLng(gps[0].trim(), gps[1].trim())
+					latlng:  new google.maps.LatLng(gps[0].trim(), gps[1].trim(), true)
 				});
 				if (isNew) {
 					$scope.locationsCount++;
