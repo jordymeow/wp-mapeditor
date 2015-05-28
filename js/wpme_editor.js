@@ -56,6 +56,8 @@
 		$scope.isAddingLocation = false;
 		$scope.isEditingLocation = false;
 		$scope.isSavingLocation = false;
+		$scope.isLoadingMap = false;
+		$scope.mapSelectMode = 'single'; // single, multiple
 
 		$scope.constants = { 
 			statuses: gmap.statuses,
@@ -94,12 +96,45 @@
 			});
 		}
 
-		/**************************************************************************************************
-			SELECT MAP
-		**************************************************************************************************/	
+		function getMap(id) {
+			for (var i in $scope.maps) {
+				if (parseInt($scope.maps[i].id) === parseInt(id)) {
+					return $scope.maps[i];
+				}
+			}
+			return null;
+		}
+
+		function mapClear(map) {
+			for (var i in $scope.locations) {
+				var loc = $scope.locations[i];
+				if (loc && (!map || loc.mapId === map.id)) {
+					gmap.remove(loc);
+					delete $scope.locations[i];
+					$scope.locationsCount--;
+				}
+			}
+		}
+
+		$scope.toggleSelectMode = function () {
+			if ($scope.mapSelectMode === 'single')
+				$scope.mapSelectMode = 'multiple';
+			else
+				$scope.mapSelectMode = 'single';
+		}
 
 		$scope.mapSelect = function (map) {
 			var map = map;
+			$scope.isLoadingMap = true;
+			if ($scope.mapSelectMode === 'single') {
+				mapClear();
+			}
+			else if ($scope.mapSelectMode === 'multiple' && !map.ticked) {
+				mapClear(map);
+			}
+			if (!$scope.locationsCount) {
+				$scope.isFitBounded = false;
+			}
 			if (map.ticked) {
 				$http.post( ajaxurl, {
 					action: 'load_locations',
@@ -109,28 +144,20 @@
 					var data = angular.fromJson(reply.data);
 					for (var i in data) {
 						var m = data[i];
-						updateLocation(m);
+						updateLocation(m, map);
 					}
 					if (!$scope.isFitBounded && data.length > 0) {
 						$scope.isFitBounded = true;
 						gmap.fitbounds($scope.locations);
 					}
+					$scope.isLoadingMap = false;
 				}).error(function (reply, status, headers) {
 					$log.error({ reply: reply });
+					$scope.isLoadingMap = false;
 				});
 			}
 			else {
-				for (var i in $scope.locations) {
-					var m = $scope.locations[i];
-					if (m && m.mapId == map.id) {
-						gmap.remove($scope.locations[m.id]);
-						delete $scope.locations[m.id];
-						$scope.locationsCount--;
-					}
-				}
-				if (!$scope.locationsCount) {
-					$scope.isFitBounded = false;
-				}
+				$scope.isLoadingMap = false;
 			}
 		};
 
@@ -152,7 +179,7 @@
 				period: "ANYTIME",
 				difficulty: null,
 				rating: null,
-				mapId: $scope.mostRecentMapId
+				mapId: parseInt($scope.mostRecentMapId)
 			};
 			jQuery('#wpme-modal-location').modal('show');
 		}
@@ -266,7 +293,9 @@
 				$scope.isDragging = false;
 				var reply = angular.fromJson(reply);
 				if (reply.success) {
-					updateLocation(reply.data);
+					var map = getMap($scope.editor.editLocation.mapId);
+					console.debug(map);
+					updateLocation(reply.data, map);
 				}
 				else {
 					alert(reply.message);
@@ -314,10 +343,17 @@
 		}
 
 		// Update location from a json location from the server
-		var updateLocation = function(location) {
+		var updateLocation = function(location, map) {
 			if (!location.coordinates) {
 				$log.warn("Location has not coordinates", location);
 				return;
+			}
+			if (!map) {
+				map = getMap(location.mapId);
+				if (!map) {
+					$log.warn("updateLocation requires a map or mapId", location, map);
+					return;
+				}
 			}
 			var isNew = !$scope.locations[location.id];
 			var gps = location.coordinates.split(',');
@@ -328,8 +364,8 @@
 					};
 				}
 				angular.extend($scope.locations[location.id], {
-					id: location.id, 
-					mapId: map.id, 
+					id: parseInt(location.id), 
+					mapId: parseInt(map.id), 
 					mapName: map.name,
 					description: location.description,
 					name: location.name, 

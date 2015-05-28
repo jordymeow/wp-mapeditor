@@ -5,15 +5,19 @@
 	<nav id="wme-navbar-header" class="navbar navbar-inverse">
 		<div class="container-fluid">
 
-			<div isteven-multi-select class="btn-sm" style="
+			<button type="button" ladda="isLoadingMap" class="btn btn-primary btn-sm navbar-btn pull-left" ng-click="toggleSelectMode()">
+				<span ng-show="mapSelectMode === 'single'" class="glyphicon glyphicon-map-marker"></span>
+				<span ng-show="mapSelectMode === 'multiple'" class="glyphicon glyphicon-globe"></span>
+			</button>
+
+			<div isteven-multi-select id="wme-map-selector" class="btn-sm" style="
 					float: left;
 					margin-top: 5px;
-					position: relative;
-					left: -12px;
-					margin-right: -18px;"
+					position: relative;"
 				input-model="maps"
 				output-model="selectedMaps"
 				helper-elements=""
+				selection-mode="{{mapSelectMode}}"
 				button-label="icon name"
 				item-label="icon name maker"
 				disable-property="disabled"
@@ -21,7 +25,7 @@
 				tick-property="ticked">
 			</div>
 
-			<div class="btn-group" ng-show="selectedMaps.length > 0">
+			<div class="btn-group" ng-disabled="selectedMaps.length < 1">
 				<button type="button" class="btn btn-primary btn-sm dropdown-toggle" data-toggle="dropdown" aria-expanded="false">
 					<span ng-if="displayMode === 'status'">
 						<span class="glyphicon glyphicon-flag"></span> Status <span class="caret"></span>
@@ -39,7 +43,7 @@
 					<li><a href="#" ng-click="setDisplayMode('period')"><span class="glyphicon glyphicon-tree-conifer"></span> Period</a></li>
 				</ul>
 			</div>
-			<button type="button" ng-show="selectedMaps.length > 0" class="btn btn-success btn-sm navbar-btn" ng-click="onAddLocationClick()">
+			<button type="button" ng-disabled="selectedMaps.length < 1" class="btn btn-success btn-sm navbar-btn" ng-click="onAddLocationClick()">
 				<span class="glyphicon glyphicon-plus"></span> Location
 			</button>
 <!-- 			<button type="button" class="btn btn-success btn-sm navbar-btn">

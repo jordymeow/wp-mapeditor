@@ -33,8 +33,7 @@ class Meow_MapEditor_Tools extends Meow_MapEditor_Server {
 				$post_id = wp_insert_post( array(
 					'post_title' => $location['Name'],
 					'post_content' => $location['Name'],
-					'post_status' => "draft",
-					//'tax_input' => array( 'map' => 'Untitled' ),
+					'post_status' => "publish",
 					'post_type' => "location",
 				), true );
 				if ( is_wp_error( $post_id ) ) {

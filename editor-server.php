@@ -6,6 +6,7 @@ class Meow_MapEditor_Server extends Meow_MapEditor {
 		parent::__construct();
 		add_action( 'admin_menu', array( $this, 'admin_menu' ) );
 		add_action( 'delete_post', array( $this, 'delete_post' ) );
+		add_action( 'admin_head', array( $this, 'admin_head' ) );
 		add_action( 'wp_ajax_edit_location', array( $this, 'ajax_edit_location' ) );
 		add_action( 'wp_ajax_add_location', array( $this, 'ajax_add_location' ) );
 		add_action( 'wp_ajax_delete_location', array( $this, 'ajax_delete_location' ) );
@@ -38,6 +39,10 @@ class Meow_MapEditor_Server extends Meow_MapEditor {
 		add_action( 'admin_print_styles-' . $submenu, array( $this, 'map_editor_css' ) );
 	}
 
+	function admin_head() {
+		echo '<script type="text/javascript">window.gmap = { plugdir: \'' . plugin_dir_url( __FILE__ ) . '\' }</script>';
+	}
+
 	function map_editor_js() {
 		wp_enqueue_script( 'bootstrap', plugins_url( '/js/bootstrap.min.js', __FILE__ ), array(), "3.3.4", false );
 		wp_enqueue_script( 'angular', plugins_url( '/js/angular.min.js', __FILE__ ), array(), "1.4.0-rc2", false );
@@ -53,8 +58,8 @@ class Meow_MapEditor_Server extends Meow_MapEditor {
 		wp_enqueue_script( 'angular-ladda', plugins_url( '/js/angular-ladda.min.js', __FILE__ ), array( 'angular', 'ladda-js' ), "0.0.1", false );
 
 		// Editor
-		wp_enqueue_script( 'wpme-gmap', plugins_url( '/js/wpme_gmap.js', __FILE__ ), array( 'gmap' ), "0.0.1", false );
-		wp_enqueue_script( 'wpme-editor', plugins_url( '/js/wpme_editor.js', __FILE__ ), array( 'bootstrap', 'angular', 'ladda-js', 'gmap', 'wpme-gmap' ), "0.0.1", false );
+		wp_enqueue_script( 'wpme-gmap', plugins_url( '/js/wpme_gmap.js', __FILE__ ), array( 'gmap' ), "0.0.1", true );
+		wp_enqueue_script( 'wpme-editor', plugins_url( '/js/wpme_editor.js', __FILE__ ), array( 'bootstrap', 'angular', 'ladda-js', 'gmap', 'wpme-gmap' ), "0.0.1", true );
 	}
 
 	function map_editor_css() {
@@ -99,7 +104,7 @@ class Meow_MapEditor_Server extends Meow_MapEditor {
 			$location->id = wp_insert_post( array(
 				'post_title' => $location->name,
 				'post_content' => $location->description,
-				'post_status' => "draft",
+				'post_status' => "publish",
 				'post_type' => "location",
 			), true );
 			if ( is_wp_error( $location->id ) ) {

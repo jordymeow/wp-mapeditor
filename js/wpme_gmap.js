@@ -5,13 +5,13 @@
 			FUNCTIONS & DATA
 	**************************************************************************************************/
 
-	w.gmap = {
-		statuses: [ 'CHECKED', 'OK', 'MISLOCATED', 'DRAFT', 'UNAVAILABLE' ],
+	jQuery.extend(w.gmap, {
+		statuses: [ 'CHECKED', 'MUST', 'OK', 'MISLOCATED', 'DRAFT', 'UNAVAILABLE' ],
 		types: [ 'ENTERTAINMENT', 'FACTORY', 'HOSPITAL', 'HOTEL', 'HOUSE', 'LANDSCAPE', 'INDUSTRIAL', 'MILITARY', 'OFFICE', 'RELIGION', 'SCHOOL', 'UNSPECIFIED', 'RUIN', 'UNAVAILABLE' ],
 		periods: [ 'ANYTIME', 'SPRING', 'SUMMER', 'AUTUMN', 'WINTER' ],
 		difficulties: [ 1, 2, 3, 4, 5 ],
-		ratings: [ 1, 2, 3, 4, 5 ],
-	};
+		ratings: [ 1, 2, 3, 4, 5 ]
+	});
 
 	var map;
 	var icon_pin;
@@ -21,7 +21,8 @@
 	var icons_status = {};
 	var icons_type = {};
 	var icons_period = {};
-	var plugin_url = '/wp-content/plugins/wp-map-editor';
+	var size = 20;
+	var scaledSize = 20;
 
 	w.gmap.onInit = function(div, init, click) {
 		google.maps.event.addDomListener(window, 'load', function () {
@@ -34,37 +35,37 @@
 				click();
 			});
 			icon_pin = {
-				url: plugin_url + '/icons/pin.png',
-				size: new google.maps.Size(24, 24),
-				scaledSize: new google.maps.Size(24, 24)
+				url: w.gmap.plugdir + 'icons/pin.png',
+				size: new google.maps.Size(size, size),
+				scaledSize: new google.maps.Size(scaledSize, scaledSize)
 			};
 			icon_pin_selected = {
-				url: plugin_url + '/icons/selected.png',
-				size: new google.maps.Size(24, 24),
-				scaledSize: new google.maps.Size(24, 24)
+				url: w.gmap.plugdir + 'icons/selected.png',
+				size: new google.maps.Size(size, size),
+				scaledSize: new google.maps.Size(scaledSize, scaledSize)
 			};
 			icon_pin_exclamation = {
-				url: plugin_url + '/icons/exclamation.png',
-				size: new google.maps.Size(24, 24),
-				scaledSize: new google.maps.Size(24, 24)
+				url: w.gmap.plugdir + 'icons/exclamation.png',
+				size: new google.maps.Size(size, size),
+				scaledSize: new google.maps.Size(scaledSize, scaledSize)
 			};
 			icon_pin_draggable = {
-				url: plugin_url + '/icons/draggable.png',
-				size: new google.maps.Size(24, 24),
-				scaledSize: new google.maps.Size(24, 24)
+				url: w.gmap.plugdir + 'icons/draggable.png',
+				size: new google.maps.Size(size, size),
+				scaledSize: new google.maps.Size(scaledSize, scaledSize)
 			};
 			for (var i in w.gmap.statuses) {
 				var st = w.gmap.statuses[i];
 				icons_status[st] = {
-					url: plugin_url + '/icons/' + st + '.png',
-					size: new google.maps.Size(24, 24),
-					scaledSize: new google.maps.Size(24, 24)
+					url: w.gmap.plugdir + 'icons/' + st + '.png',
+					size: new google.maps.Size(size, size),
+					scaledSize: new google.maps.Size(scaledSize, scaledSize)
 				};
 			}
 			for (var i in w.gmap.types) {
 				var tp = w.gmap.types[i];
 				icons_type[tp] = {
-					url: plugin_url + '/icons/' + tp + '.png',
+					url: w.gmap.plugdir + 'icons/' + tp + '.png',
 					size: new google.maps.Size(24, 24),
 					scaledSize: new google.maps.Size(24, 24)
 				};
@@ -72,7 +73,7 @@
 			for (var i in w.gmap.periods) {
 				var pe = w.gmap.periods[i];
 				icons_period[pe] = {
-					url: plugin_url + '/icons/' + pe + '.png',
+					url: w.gmap.plugdir + 'icons/' + pe + '.png',
 					size: new google.maps.Size(24, 24),
 					scaledSize: new google.maps.Size(24, 24)
 				};
