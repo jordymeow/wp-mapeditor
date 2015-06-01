@@ -25,11 +25,49 @@ class Meow_MapEditor {
 
 		if ( is_admin() ) {
 			// Friendly display of the Locations
+			add_action( 'admin_init', array( $this, 'dashboard_meta' ) );
+			add_filter( 'login_redirect', array( $this, 'login_redirect' ), 10, 3 );
 			add_filter( 'manage_edit-map_columns', array( $this, 'manage_map_columns' ), 10, 2 );
 			add_action( 'manage_map_posts_custom_column', array( $this, 'manage_map_columns_content' ), 10, 2 );
 			add_action( 'created_map', array( $this, 'created_map' ), 10, 2 );
 			add_action( 'delete_map', array( $this, 'delete_map' ), 10, 2 );
 		}
+	}
+
+	/******************************
+		OVERRIDE DEFAULT BEHAVIOR
+	******************************/	
+
+	function is_map_editor() {
+		global $current_user;
+		return is_array( $current_user->roles ) && in_array( 'map_editor', $current_user->roles );
+	}
+
+	function dashboard_meta() {
+		if ( $this->is_map_editor() ) {
+			remove_meta_box( 'dashboard_incoming_links', 'dashboard', 'normal' );
+			remove_meta_box( 'dashboard_plugins', 'dashboard', 'normal' );
+			remove_meta_box( 'dashboard_primary', 'dashboard', 'side' );
+			remove_meta_box( 'dashboard_secondary', 'dashboard', 'normal' );
+			remove_meta_box( 'dashboard_quick_press', 'dashboard', 'side' );
+			remove_meta_box( 'dashboard_recent_drafts', 'dashboard', 'side' );
+			remove_meta_box( 'dashboard_recent_comments', 'dashboard', 'normal' );
+			remove_meta_box( 'dashboard_right_now', 'dashboard', 'normal' );
+			remove_meta_box( 'dashboard_activity', 'dashboard', 'normal');
+		}
+		//add_meta_box( 'mapeditor_activity', 'Map Editor', array( $this, 'dashboard_activity' ) );
+	}
+
+	function dashboard_activity() {
+		echo "Hello world!";
+	}
+
+	function login_redirect( $redirect_to, $request, $user )
+	{
+		if ( $this->is_map_editor() ) {
+			return admin_url( 'admin.php?page=map_editor' );
+		}
+		return $redirect_to;
 	}
 
 	/******************************

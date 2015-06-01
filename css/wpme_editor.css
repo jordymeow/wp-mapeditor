@@ -16,6 +16,10 @@
 .btn {
     text-shadow: inherit;
     box-shadow: inherit;
+
+    .caret {
+    	  margin-top: inherit;
+    }
 }
 
 /*****************************

@@ -34,9 +34,10 @@ class Meow_MapEditor_Server extends Meow_MapEditor {
 	}
 
 	function admin_menu() {
-		$submenu = add_submenu_page( 'edit.php?post_type=location', 'Map Editor', 'Map Editor', 'edit_maps', 'map_editor', array( $this, 'map_editor' ) );
-		add_action( 'admin_print_scripts-' . $submenu, array( $this, 'map_editor_js' ) );
-		add_action( 'admin_print_styles-' . $submenu, array( $this, 'map_editor_css' ) );
+		//$submenu = add_submenu_page( 'edit.php?post_type=location', 'Map Editor', 'Map Editor', 'edit_maps', 'map_editor', array( $this, 'map_editor' ) );
+		$editor_menu = add_menu_page( 'Map Editor', 'Map Editor', 'edit_maps', 'map_editor', array( $this, 'map_editor' ), 'dashicons-admin-site', 30 );
+		add_action( 'admin_print_scripts-' . $editor_menu, array( $this, 'map_editor_js' ) );
+		add_action( 'admin_print_styles-' . $editor_menu, array( $this, 'map_editor_css' ) );
 	}
 
 	function admin_head() {
@@ -104,7 +105,7 @@ class Meow_MapEditor_Server extends Meow_MapEditor {
 			$location->id = wp_insert_post( array(
 				'post_title' => $location->name,
 				'post_content' => $location->description,
-				'post_status' => "publish",
+				'post_status' => "private",
 				'post_type' => "location",
 			), true );
 			if ( is_wp_error( $location->id ) ) {
