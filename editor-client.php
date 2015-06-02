@@ -6,7 +6,7 @@
 		<div class="container-fluid">
 
 			<div style="position: absolute; right: 10px; margin-top: 2px;" class="logo pull-right">
-				<a target="_blank" href="http://www.meow.fr"><img height="42" src="<?php echo plugin_dir_url( __FILE__ ); ?>/icons/jordy-meow.png"></a>
+				<a target="_blank" href="http://www.meow.fr"><img height="42" src="<?php echo plugin_dir_url( __FILE__ ); ?>/icons/jordy-meow.png" /></a>
 			</div>
 
 			<button type="button" ladda="isLoadingMap" class="btn btn-primary btn-sm navbar-btn pull-left" ng-click="toggleSelectMode()">
@@ -32,13 +32,13 @@
 			<div class="btn-group" ng-disabled="selectedMaps.length < 1">
 				<button type="button" class="btn btn-primary btn-sm dropdown-toggle" data-toggle="dropdown" aria-expanded="false">
 					<span ng-if="displayMode === 'status'">
-						<span class="glyphicon glyphicon-flag"></span> Status <span class="caret"></span>
+						<span class="glyphicon glyphicon-flag"></span> <span class="hidden-xs">Status</span> <span class="caret"></span>
 					</span>
-					<span ng-if="displayMode === 'type'">
-						<span class="glyphicon glyphicon-tree-conifer"></span> Type <span class="caret"></span>
+					<span  ng-if="displayMode === 'type'">
+						<span class="glyphicon glyphicon-tree-conifer"></span> <span class="hidden-xs">Type</span> <span class="caret"></span>
 					</span>
 					<span ng-if="displayMode === 'period'">
-						<span class="glyphicon glyphicon-tree-conifer"></span> Period <span class="caret"></span>
+						<span class="glyphicon glyphicon-tree-conifer"></span> <span class="hidden-xs">Period</span> <span class="caret"></span>
 					</span>
 				</button>
 				<ul class="dropdown-menu" role="menu">
@@ -47,8 +47,8 @@
 					<li><a href="#" ng-click="setDisplayMode('period')"><span class="glyphicon glyphicon-tree-conifer"></span> Period</a></li>
 				</ul>
 			</div>
-			<button type="button" ng-disabled="selectedMaps.length < 1" class="btn btn-success btn-sm navbar-btn" ng-click="onAddLocationClick()">
-				<span class="glyphicon glyphicon-plus"></span> Location
+			<button type="button" ng-disabled="selectedMaps.length < 1 || editor.selectedLocation" class="btn btn-success btn-sm navbar-btn" ng-click="onAddLocationClick()">
+				<span class="glyphicon glyphicon-plus"></span> <span class="hidden-xs">Location</span>
 			</button>
 <!-- 			<button type="button" class="btn btn-success btn-sm navbar-btn">
 				<span class="glyphicon glyphicon-asterisk"></span>
@@ -99,49 +99,62 @@
 
 </div>
 
-<div class="modal fade" id="wpme-modal-location">
+<div class="modal" id="wpme-modal-location">
 	<div class="modal-dialog">
 		<div class="modal-content">
 			<div class="modal-body">
 				<button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
 				<h4 style="margin-top: 0px;">Location</h4>
 				<form>
-					<div class="form-group">
-						<input type="text" class="form-control" id="name" placeholder="Name" ng-model="editor.editLocation.name">
-					</div>
-					<div class="form-group">
-						<input type="text" class="form-control" id="coordinates" placeholder="GPS Coordinates" ng-model="editor.editLocation.coordinates">
-					</div>
-					<div class="form-group">
 						<div class="row">
-							<div class="col-md-6">
-								<select id="status" class="form-control" 
-									ng-options="s as s for s in constants.statuses" ng-model="editor.editLocation.status">
-								</select>
+							<div class="col-md-8">
+								<div class="form-group">
+									<label>Name</label>
+									<input type="text" class="form-control" id="name" placeholder="Name" ng-model="editor.editLocation.name">
+								</div>
 							</div>
-							<div class="col-md-6">
-								<select id="type" class="form-control" 
-									ng-options="t as t for t in constants.types" ng-model="editor.editLocation.type">
-								</select>
+							<div class="col-md-4">
+								<div class="form-group">
+									<label>Coordinates</label>
+									<input type="text" class="form-control" id="coordinates" placeholder="GPS Coordinates" ng-model="editor.editLocation.coordinates">
+								</div>
+							</div>
+					</div>
+					
+					<div class="row">
+						<div class="col-md-6">
+							<div class="form-group">
+								<label>Status</label>
+								<select id="status" class="form-control" ng-options="s as s for s in constants.statuses" ng-model="editor.editLocation.status"></select>
+							</div>
+						</div>
+						<div class="col-md-6">
+							<div class="form-group">
+								<label>Type</label>
+								<select id="type" class="form-control" ng-options="t as t for t in constants.types" ng-model="editor.editLocation.type"></select>
 							</div>
 						</div>
 					</div>
+
 					<div class="form-group">
 						<textarea class="form-control" id="description" rows="3" placeholder="Description" ng-model="editor.editLocation.description"></textarea>
 					</div>
 					<div class="form-group">
 						<div class="row">
 							<div class="col-md-4">
+								<label>Period / Season</label>
 								<select id="period" class="form-control" 
 									ng-options="p as p for p in constants.periods" ng-model="editor.editLocation.period">
 								</select>
 							</div>
 							<div class="col-md-4">
+								<label>Difficulty</label>
 								<select id="difficulty" class="form-control" 
 									ng-options="d as d for d in constants.difficulties" ng-model="editor.editLocation.difficulty">
 								</select>
 							</div>
 							<div class="col-md-4">
+								<label>Rating</label>
 								<select id="rating" class="form-control" 
 									ng-options="r as r for r in constants.ratings" ng-model="editor.editLocation.rating">
 								</select>

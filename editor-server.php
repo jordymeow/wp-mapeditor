@@ -20,8 +20,6 @@ class Meow_MapEditor_Server extends Meow_MapEditor {
 		$user_id = get_current_user_id();
 		if ( is_admin() && !current_user_can( 'edit_others_posts' ) ) {
 			$query->set( 'author', $user_id );
-			//add_filter('views_edit-post', 'fix_post_counts');
-			//add_filter('views_upload', 'fix_media_counts');
 		}
 	}
 	
@@ -34,7 +32,11 @@ class Meow_MapEditor_Server extends Meow_MapEditor {
 	}
 
 	function admin_menu() {
-		//$submenu = add_submenu_page( 'edit.php?post_type=location', 'Map Editor', 'Map Editor', 'edit_maps', 'map_editor', array( $this, 'map_editor' ) );
+		global $current_user;
+		if ( is_array( $current_user->roles ) && in_array( 'map_editor', $current_user->roles ) && count( $current_user->roles ) == 1 ) {
+			remove_menu_page( 'edit-tags.php?taxonomy=category' );
+			remove_menu_page( 'edit-tags.php?taxonomy=post_tag' );
+		}
 		$editor_menu = add_menu_page( 'Map Editor', 'Map Editor', 'edit_maps', 'map_editor', array( $this, 'map_editor' ), 'dashicons-admin-site', 30 );
 		add_action( 'admin_print_scripts-' . $editor_menu, array( $this, 'map_editor_js' ) );
 		add_action( 'admin_print_styles-' . $editor_menu, array( $this, 'map_editor_css' ) );
@@ -182,22 +184,7 @@ class Meow_MapEditor_Server extends Meow_MapEditor {
 	}
 
 	function ajax_load_maps() {
-		global $wpdb;
-		$table = $this->get_db_role();
-		$user_id = get_current_user_id();
-		$lastticked = get_transient( "wme_lastticked_" . $user_id );
-		$results = $wpdb->get_results( 
-			"SELECT t.term_id id, t.name name, 0 ticked
-			FROM $table r, $wpdb->terms t
-			WHERE r.term_id = t.term_id"
-			. (!is_super_admin() ? " AND r.user_id = $user_id " : " ")
-			. "GROUP BY t.term_id, t.name", OBJECT );
-		if ( !empty( $lastticked ) )
-			foreach ( $results as $result ) {
-				$result->ticked = false;
-				if ( $result->id == $lastticked )
-					$result->ticked = true;
-			}
+		$results = $this->get_maps();
 		echo json_encode( array( 'success' => true, 'data' => $results ) );
 		wp_die();
 	}

@@ -160,6 +160,10 @@
 		w.gmap.setLocationIcon(location, mode);
 	}
 
+	w.gmap.goTo = function(location) {
+		map.panTo(location.marker.getPosition());
+	}
+
 	w.gmap.add = function(location, mode, mouseover, mouseout, click) {
 		location.marker = new google.maps.Marker({
 			position: location.latlng,
@@ -176,7 +180,7 @@
 			mouseout(location);
 		});
 		google.maps.event.addListener(location.marker, 'click', function() {
-			map.panTo(location.marker.getPosition())
+			map.panTo(location.marker.getPosition());
 			click(location);
 		});
 	}

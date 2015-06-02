@@ -26,6 +26,9 @@ class Meow_MapEditor {
 		if ( is_admin() ) {
 			// Friendly display of the Locations
 			add_action( 'admin_init', array( $this, 'dashboard_meta' ) );
+			add_filter( 'manage_location_posts_columns', array( $this, 'manage_location_posts_columns' ) );
+			add_filter( 'manage_location_posts_custom_column', array( $this, 'manage_location_posts_custom_column' ), 10, 2 );
+			add_action( 'wp_dashboard_setup', array( $this, 'dashboard_setup' ) );
 			add_filter( 'login_redirect', array( $this, 'login_redirect' ), 10, 3 );
 			add_filter( 'manage_edit-map_columns', array( $this, 'manage_map_columns' ), 10, 2 );
 			add_action( 'manage_map_posts_custom_column', array( $this, 'manage_map_columns_content' ), 10, 2 );
@@ -35,7 +38,7 @@ class Meow_MapEditor {
 	}
 
 	/******************************
-		OVERRIDE DEFAULT BEHAVIOR
+		DASHBOARD
 	******************************/	
 
 	function is_map_editor() {
@@ -55,11 +58,53 @@ class Meow_MapEditor {
 			remove_meta_box( 'dashboard_right_now', 'dashboard', 'normal' );
 			remove_meta_box( 'dashboard_activity', 'dashboard', 'normal');
 		}
-		//add_meta_box( 'mapeditor_activity', 'Map Editor', array( $this, 'dashboard_activity' ) );
+	}
+
+	function dashboard_setup() {
+		global $wp_meta_boxes;
+		wp_add_dashboard_widget('mapeditor_activity', 'Activity', array( $this, 'dashboard_activity' ) );
+		wp_add_dashboard_widget('mapeditor_shortcuts', 'Shortcuts', array( $this, 'dashboard_shortcuts' ) );
+		wp_add_dashboard_widget('mapeditor_statuses', 'Status Info', array( $this, 'dashboard_statuses' ) );
 	}
 
 	function dashboard_activity() {
-		echo "Hello world!";
+		?>
+		<div class="main">
+			<ul>
+				<li><a href="edit-tags.php?taxonomy=map&post_type=location"><?php echo count( $this->get_maps() ); ?> Maps</a></li>
+				<li><a href="edit.php?post_type=location"><?php echo $this->count_locations(); ?> Locations</a></li>
+			</ul>
+		</div>
+		<?php
+	}
+
+	function dashboard_shortcuts() {
+		?>
+		<div class="main">
+			<ul>
+				<li>Key "e": Edit the selected location</li>
+				<li>Key "a": Add a location at the center</li>
+				<li>Right click: Add a location at the center</li>
+				<li>Escape: Close the windows</li>
+			</ul>
+		</div>
+		<?php
+	}
+
+	function dashboard_statuses() {
+		?>
+		<div class="main">
+			<p>Here is a description of each location status.</p>
+			<ul>
+				<li><img height="20" style="position: absolute;" src="<?php echo plugin_dir_url( __FILE__ ); ?>/icons/CHECKED.png" /><span style="margin-left: 24px;">CHECKED: It has been visited.</span></li>
+				<li><img height="20" style="position: absolute;" src="<?php echo plugin_dir_url( __FILE__ ); ?>/icons/MUST.png" /><span style="margin-left: 24px;">MUST: It must be visited absolutely.</span></li>
+				<li><img height="20" style="position: absolute;" src="<?php echo plugin_dir_url( __FILE__ ); ?>/icons/OK.png" /><span style="margin-left: 24px;">OK: This location is OK and not visited yet.</span></li>
+				<li><img height="20" style="position: absolute;" src="<?php echo plugin_dir_url( __FILE__ ); ?>/icons/MISLOCATED.png" /><span style="margin-left: 24px;">MISLOCATED: It is mislocated.</span></li>
+				<li><img height="20" style="position: absolute;" src="<?php echo plugin_dir_url( __FILE__ ); ?>/icons/DRAFT.png" /><span style="margin-left: 24px;">DRAFT: It is a draft (requires more info).</span></li>
+				<li><img height="20" style="position: absolute;" src="<?php echo plugin_dir_url( __FILE__ ); ?>/icons/UNAVAILABLE.png" /><span style="margin-left: 24px;">UNAVAILABLE: It is demolished or inacessible.</span></li>
+			</ul>
+		</div>
+		<?php
 	}
 
 	function login_redirect( $redirect_to, $request, $user )
@@ -68,6 +113,40 @@ class Meow_MapEditor {
 			return admin_url( 'admin.php?page=map_editor' );
 		}
 		return $redirect_to;
+	}
+
+	/******************************
+		COLUMNS
+	******************************/	
+
+	function manage_location_posts_columns( $cols ) {
+		$cols["wme_type"] = "Type";
+		$cols["wme_status"] = "Status";
+		$cols["wme_coordinates"] = "Coordinates";
+		return $cols;
+	}
+
+	function manage_location_posts_custom_column( $column_name, $id ) {
+		if ( $column_name == 'wme_type' ) {
+			echo get_post_meta( $id, $column_name, true );
+			return true;
+		}
+		else if ( $column_name == 'wme_status' ) {
+			echo get_post_meta( $id, $column_name, true );
+			return true;
+		}
+		else if ( $column_name == 'wme_coordinates' ) {
+			$gps = get_post_meta( $id, $column_name, true );
+			if ( empty( $gps ) )
+				echo "N/A";
+			else {
+				echo '<a target="_blank" href="https://www.google.com/maps/dir//' . $gps . '/@' . $gps . '">';
+				echo get_post_meta( $id, $column_name, true );
+				echo '</a>';
+			}
+			return true;
+		}
+		return false;
 	}
 
 	/******************************
@@ -154,6 +233,40 @@ class Meow_MapEditor {
 			$html .= '<br />&#8594; ' . $correction;
 			echo $html;
 		}
+	}
+
+	function count_locations() {
+		global $wpdb;
+		$table = $this->get_db_role();
+		$user_id = get_current_user_id();
+		$count = $wpdb->get_var( $wpdb->prepare(
+			"SELECT COUNT(*)
+			FROM $table r, $wpdb->posts p, $wpdb->term_relationships s
+			WHERE p.post_status <> %s
+			AND p.ID = s.object_id"
+			. ( is_super_admin() ? "" : " AND r.user_id = %d" )
+			. " AND s.term_taxonomy_id = r.term_id", 'trash', $user_id ) );
+		return $count;
+	}
+
+	function get_maps() {
+		global $wpdb;
+		$table = $this->get_db_role();
+		$user_id = get_current_user_id();
+		$lastticked = get_transient( "wme_lastticked_" . $user_id );
+		$results = $wpdb->get_results( 
+			"SELECT t.term_id id, t.name name, 0 ticked
+			FROM $table r, $wpdb->terms t
+			WHERE r.term_id = t.term_id"
+			. (!is_super_admin() ? " AND r.user_id = $user_id " : " ")
+			. "GROUP BY t.term_id, t.name", OBJECT );
+		if ( !empty( $lastticked ) )
+			foreach ( $results as $result ) {
+				$result->ticked = false;
+				if ( $result->id == $lastticked )
+					$result->ticked = true;
+			}
+		return $results;
 	}
 
 	/**************************************

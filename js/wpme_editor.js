@@ -124,6 +124,8 @@
 		}
 
 		$scope.mapSelect = function (map) {
+			if ($scope.mostRecentMapId == map.id)
+				return;
 			var map = map;
 			$scope.isLoadingMap = true;
 			if ($scope.mapSelectMode === 'single') {
@@ -196,6 +198,7 @@
 				if (reply.success) {
 					updateLocation(reply.data);
 					jQuery('#wpme-modal-location').modal('hide');
+					gmap.goTo($scope.locations[reply.data.id]);
 				}
 				else {
 					jQuery('#wpme-modal-location').modal('hide');
@@ -214,6 +217,8 @@
 
 		// Display the popup
 		$scope.onEditLocationClick = function () {
+			if (!$scope.editor.selectedLocation)
+				return;
 			$scope.isEditingLocation = true;
 			$scope.isAddingLocation = false;
 			copyEditLocation();
@@ -232,6 +237,7 @@
 				if (reply.success) {
 					updateLocation(reply.data);
 					jQuery('#wpme-modal-location').modal('hide');
+					gmap.goTo($scope.locations[reply.data.id]);
 				}
 				else {
 					alert(reply.message);
@@ -267,6 +273,41 @@
 				alert("Error.");
 			});
 		};
+
+		/**************************************************************************************************
+			KEYBOARD AND MOUSE BINDINGS
+		**************************************************************************************************/
+
+		jQuery(document).keyup(function (e) {
+			if (e.keyCode == 69) { // e
+				if ($scope.editor.selectedLocation) {
+					$scope.onEditLocationClick();
+					$scope.$apply();
+				}
+			}
+			else if (e.keyCode == 27) { // escape
+				jQuery('.modal').modal('hide');
+			}
+			else if (e.keyCode == 65) { // a
+				if (!$scope.editor.selectedLocation) {
+					$scope.onAddLocationClick();
+					$scope.$apply();
+				}
+			}
+		});
+
+		document.oncontextmenu = function() {
+			return false;
+		};
+
+		jQuery('#wpme-map').mousedown(function(e) { 
+			if ( e.button == 2 ) { 
+				event.preventDefault();
+				$scope.onAddLocationClick();
+				return true; 
+			} 
+			return true; 
+		}); 
 
 		/**************************************************************************************************
 			DRAG
