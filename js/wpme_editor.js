@@ -44,7 +44,7 @@
 			EDITOR CONTROLLER
 	**************************************************************************************************/
 
-	function EditorCtrl($scope, $location, $timeout, $filter, $log, $http) {
+	function EditorCtrl($scope, $location, $timeout, $filter, $log, $http, $q) {
 		$scope.maps = [];
 		$scope.selectedMaps = [];
 		$scope.mostRecentMapId = [];
@@ -67,11 +67,25 @@
 			ratings: gmap.ratings
 		};
 
+		// Editor
 		$scope.editor = {
 			hoveredLocation: null,
 			selectedLocation: null,
 			editLocation: null, // location being edited
 			distanceFromSelected: null
+		};
+
+		// Import / Export
+		$scope.ie = {
+			isImporting: true,
+			isExporting: true,
+			isWorking: false,
+			currentIndex: null,
+			file: null,
+			status: null,
+			type: null,
+			locations: null,
+			mapId: null
 		};
 
 		/**************************************************************************************************
@@ -188,6 +202,7 @@
 
 		// Actually modify the location
 		$scope.addLocation = function () {
+			var deferred = $q.defer();
 			$scope.isSavingLocation = true;
 			$http.post(ajaxurl, { 
 				'action': 'add_location',
@@ -199,16 +214,19 @@
 					updateLocation(reply.data);
 					jQuery('#wpme-modal-location').modal('hide');
 					gmap.goTo($scope.locations[reply.data.id]);
+					deferred.resolve($scope.locations[reply.data.id]);
 				}
 				else {
 					jQuery('#wpme-modal-location').modal('hide');
-					alert(reply.message);
+					$log.warn({ reply: reply });
+					deferred.reject(reply);
 				}
 			}).error(function (reply, status, headers) {
 				jQuery('#wpme-modal-location').modal('hide');
 				$log.error({ reply: reply });
-				alert("Error.");
+				deferred.reject(reply);
 			});
+			return deferred.promise;
 		};
 
 		/**************************************************************************************************
@@ -296,18 +314,14 @@
 			}
 		});
 
+		jQuery('#wpme-import-export .nav-tabs a').click(function (e) {
+			e.preventDefault();
+			jQuery(this).tab('show');
+		})
+
 		document.oncontextmenu = function() {
 			return false;
 		};
-
-		jQuery('#wpme-map').mousedown(function(e) { 
-			if ( e.button == 2 ) { 
-				event.preventDefault();
-				$scope.onAddLocationClick();
-				return true; 
-			} 
-			return true; 
-		}); 
 
 		/**************************************************************************************************
 			DRAG
@@ -365,6 +379,164 @@
 		};
 
 		/**************************************************************************************************
+			IMPORT / EXPORT
+		**************************************************************************************************/
+
+		$scope.onImportExportClick = function () {
+			$scope.ie.file = null;
+			$scope.ie.status = 'DRAFT';
+			$scope.ie.type = 'UNSPECIFIED';
+			$scope.ie.locations = [];
+			$scope.ie.currentIndex = null;
+			$scope.ie.mapId = $scope.mostRecentMapId;
+			$scope.ie.isImporting = true;
+			$scope.ie.isExporting = false;
+			$scope.ie.isWorking = false;
+			jQuery('#wpme-import-export').modal('show');
+		};
+
+		function parseFileAsKML(content) {
+			var locs = [];
+			try {
+				var xmlDoc = jQuery.parseXML(content);
+				var xml = jQuery(xmlDoc).find('Placemark');
+				var c = 0;
+				while (++c < xml.length) {
+					var coords = jQuery(xml[c]).find('Point coordinates').text();
+					if (!coords)
+						continue;
+					coords = coords.split(',');
+					if (coords.length < 2)
+						continue;
+					var fileloc = {
+						name: jQuery(xml[c]).find('name').text(),
+						coordinates: roundCoordinates(coords[1] + "," + coords[0]),
+					};
+					if (fileloc.name && fileloc.coordinates) {
+						locs.push(fileloc);
+					}
+				}
+				return locs;
+			}
+			catch(e) {
+				$log.warn("Cannot parse file as XML");
+				return null;
+			}
+		}
+
+		function parseFileAsHCrap(content) {
+			var locs = [];
+			try {
+				var json = jQuery.parseJSON(content);
+				var c = 0;
+				while (++c < json.length) {
+					if (!json[c].lat || !json[c].lng)
+						return;
+					var type = "UNSPECIFIED";
+					if (json[c].kind == 1 || json[c].kind == 12 || json[c].kind == 28) {
+						type = "HOUSE";
+					}
+					else if (json[c].kind == 2 || json[c].kind == 17) {
+						type = "HOTEL";
+					}
+					else if (json[c].kind == 3 || json[c].kind == 11 || json[c].kind == 24) {
+						type = "INDUSTRIAL";
+					}
+					else if (json[c].kind == 4) {
+						type = "HOSPITAL";
+					}
+					else if (json[c].kind == 5 || json[c].kind == 14 || json[c].kind == 20 || json[c].kind == 21 || json[c].kind == 31 || json[c].kind == 32) {
+						type = "ENTERTAINMENT";
+					}
+					else if (json[c].kind == 6) {
+						type = "SCHOOL";
+					}
+					else if (json[c].kind == 7) {
+						type = "RELIGION";
+					}
+					else if (json[c].kind == 13 || json[c].kind == 22) {
+						type = "MILITARY";
+					}
+					else if (json[c].kind == 23) {
+						type = "LANDSCAPE";
+					}
+					else if (json[c].kind == 25 || json[c].kind == 26) {
+						type = "OFFICE";
+					}
+					else if (json[c].kind == 27) {
+						type = "RUIN";
+					}
+					var fileloc = {
+						name: json[c].name,
+						description: json[c].wiki,
+						type: type,
+						coordinates: roundCoordinates(json[c].lat + "," + json[c].lng)
+					};
+					if (fileloc.name && fileloc.coordinates) {
+						locs.push(fileloc);
+					}
+				}
+				return locs;
+			}
+			catch(e) {
+				$log.warn("Cannot parse file as HCrap JSON");
+				return null;
+			}
+		}
+
+		$scope.onFileChanged = function (element) {
+			var file = element.files[0];
+			var reader = new FileReader();
+			reader.onloadend = function(f) {
+				var attempt = parseFileAsKML(reader.result);
+				if (!attempt)
+					attempt = parseFileAsHCrap(reader.result);
+				if (attempt) {
+					$scope.ie.locations = attempt;
+					$scope.ie.isWorking = false;
+					$scope.$apply();
+					return;
+				}
+				alert("This file is not recognized.");
+			};
+			$scope.ie.isWorking = true;
+			reader.readAsText(file);
+		};
+
+		$scope.onImportClick = function () { 
+			if ($scope.ie.currentIndex === null) {
+				$scope.ie.currentIndex = 0;
+				$scope.ie.isWorking = true;
+			}
+			else if ($scope.ie.currentIndex >= $scope.ie.locations.length - 1) {
+				$scope.ie.isWorking = false;
+				$scope.ie.currentIndex = null;
+				$scope.ie.locations = [];
+				$scope.ie.file = null;
+				return;
+			}
+			else {
+				$scope.ie.currentIndex++;
+			}
+			$scope.editor.editLocation = {
+				name: $scope.ie.locations[$scope.ie.currentIndex].name,
+				description: $scope.ie.locations[$scope.ie.currentIndex].description || "",
+				coordinates: $scope.ie.locations[$scope.ie.currentIndex].coordinates,
+				status: $scope.ie.status,
+				type: $scope.ie.locations[$scope.ie.currentIndex].type || $scope.ie.type,
+				period: "ANYTIME",
+				difficulty: null,
+				rating: null,
+				mapId: $scope.mostRecentMapId
+			};
+			var p = $scope.addLocation().then(function (l) {
+				$scope.onImportClick();
+			}, function (reply) {
+				$scope.onImportClick();
+			});;
+		};
+
+		/**************************************************************************************************
 			GENERAL FUNCTIONS
 		**************************************************************************************************/
 
@@ -372,7 +544,7 @@
 			if (!coordinates)
 				return null;
 			var gps = coordinates.split(',');
-			if (gps.length !== 2)
+			if (gps.length < 2)
 				return null;
 			return parseFloat(gps[0]).toFixed(4) + "," + parseFloat(gps[1]).toFixed(4);
 		}

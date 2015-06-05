@@ -25,6 +25,8 @@ class Meow_MapEditor_Server extends Meow_MapEditor {
 	
 	function list_terms_exclusions( $exclusions, $args ) {
 		global $wpdb;
+		if ( is_super_admin() )
+			return $exclusions;
 		$user_id = get_current_user_id();
 		$table = $this->get_db_role();
 		$exclusions .= " AND ( t.term_id NOT IN (SELECT term_id FROM $table wme_role WHERE wme_role.user_id <> $user_id ) )";
@@ -104,6 +106,19 @@ class Meow_MapEditor_Server extends Meow_MapEditor {
 		}
 		global $wpdb;
 		if ( $this->user_has_role_for_map( $location->mapId ) ) {
+
+			// Check if the location exists on this map with the same coordinates
+			$existsAlready = $wpdb->get_var( $wpdb->prepare( "SELECT COUNT(*) FROM (
+				SELECT (SELECT meta_value FROM $wpdb->postmeta m WHERE m.post_id = p.ID AND m.meta_key = 'wme_coordinates') coordinates
+				FROM $wpdb->posts p, $wpdb->term_relationships s
+				WHERE p.post_status <> 'trash'
+				AND p.ID = s.object_id
+				AND s.term_taxonomy_id = %d) p
+				WHERE p.coordinates = %s", $location->mapId, $location->coordinates ) );
+			if ( $existsAlready > 0 ) {
+				echo json_encode( array( 'success' => false, 'data' => "A location on this map exists already with the same coordinates." ) );
+				die;
+			}
 			$location->id = wp_insert_post( array(
 				'post_title' => $location->name,
 				'post_content' => $location->description,

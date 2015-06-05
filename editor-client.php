@@ -91,6 +91,11 @@
 	</div>
 	<div id="wpme-map"></div>
 	<nav id="wme-navbar-footer">
+		<div class="pull-right">
+			<a type="button" href="" ng-disabled="selectedMaps.length < 1" ng-click="onImportExportClick()">
+				<span class="glyphicon glyphicon-flash"></span> Import / Export
+			</a>
+		</div>
 		{{editor.hoveredLocation.name}}
 		<span class="distance" ng-show="editor.distanceFromSelected">
 			({{editor.distanceFromSelected}})
@@ -169,6 +174,66 @@
 				<div ng-show="isAddingLocation" class="form-group pull-right">
 					<select id="map" class="form-control" 
 						ng-options="r.id as r.name for r in maps" ng-model="editor.editLocation.mapId"
+						style="margin: 3px 13px 3px 0px; width: 200px;">
+					</select>
+				</div>
+			</div>
+		</div><!-- /.modal-content -->
+	</div><!-- /.modal-dialog -->
+</div><!-- /.modal -->
+
+<div class="modal" id="wpme-import-export">
+	<div class="modal-dialog">
+		<div class="modal-content">
+			<div class="modal-body">
+				<button type="button" class="close" data-dismiss="modal"><span>&times;</span></button>
+
+				<ul class="nav nav-pills" role="tablist">
+					<li ng-class="{active: ie.isImporting}"><a href="" ng-click="ie.isImporting = true; ie.isExporting = false;">Import</a></li>
+					<li ng-class="{active: ie.isExporting}"><a href="" ng-click="ie.isImporting = false; ie.isExporting = true;">Export</a></li>
+				</ul>
+
+				<div ng-show="ie.isImporting">
+					<p><br />You can import locations from Google Maps through a KML file. If you got a KMZ file, it is a zip. Unzip it, and use the KML file you will find in it.</p>
+					<form>
+						<div class="form-group">
+							<label>File</label>
+							<input class="form-control" type="file" name="file" onchange="angular.element(this).scope().onFileChanged(this)" ng-model="ie.file"></textarea>
+						</div>
+						<p class="alert alert-info" ng-show="ie.locations.length > 0">{{ie.locations.length}} locations are ready to be imported. If no information about status and type is found in the data, the status and type above will be used.</p>
+						<div class="row" ng-show="ie.locations.length > 0">
+							<div class="col-md-6">
+								<div class="form-group">
+									<label>Status</label>
+									<select id="status" class="form-control" ng-options="s as s for s in constants.statuses" ng-model="ie.status"></select>
+								</div>
+							</div>
+							<div class="col-md-6">
+								<div class="form-group">
+									<label>Type</label>
+									<select id="type" class="form-control" ng-options="t as t for t in constants.types" ng-model="ie.type"></select>
+								</div>
+							</div>
+						</div>
+					</form>
+					<div class="progress" ng-show="ie.isWorking && $scope.ie.currentIndex !== null">
+						<div class="progress-bar progress-bar-success progress-bar-striped" style="width: {{ie.currentIndex / ie.locations.length * 100}}%;">
+								{{ie.currentIndex}} / {{ie.locations.length}}
+						</div>
+					</div>
+				</div>
+
+				<div ng-show="ie.isExporting">
+					<p><br />Working on it! :) There will be KML, CSV. What else do you need?</p>
+				</div>
+				
+			</div>
+			<div class="modal-footer">
+				<button ng-show="ie.isImporting" ng-disabled="!ie.locations.length" type="button" ladda="ie.isWorking" ng-click="onImportClick()" class="btn btn-primary pull-right"><span class="glyphicon glyphicon-plus"></span> Import</button>
+				<button ng-show="ie.isExporting" ng-disabled="!ie.locations.length" type="button" ladda="ie.isWorking" ng-click="exportLocations()" class="btn btn-primary pull-right"><span class="glyphicon glyphicon-plus"></span> Export</button>
+				<div ng-show="ie.isImporting || ie.isExporting" class="form-group pull-right">
+					<select id="map" class="form-control" 
+						ng-options="r.id as r.name for r in maps" ng-model="ie.mapId"
 						style="margin: 3px 13px 3px 0px; width: 200px;">
 					</select>
 				</div>

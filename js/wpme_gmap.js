@@ -7,7 +7,7 @@
 
 	jQuery.extend(w.gmap, {
 		statuses: [ 'CHECKED', 'MUST', 'OK', 'MISLOCATED', 'DRAFT', 'UNAVAILABLE' ],
-		types: [ 'ENTERTAINMENT', 'FACTORY', 'HOSPITAL', 'HOTEL', 'HOUSE', 'LANDSCAPE', 'INDUSTRIAL', 'MILITARY', 'OFFICE', 'RELIGION', 'SCHOOL', 'UNSPECIFIED', 'RUIN', 'UNAVAILABLE' ],
+		types: [ 'ENTERTAINMENT', 'HOSPITAL', 'HOTEL', 'HOUSE', 'LANDSCAPE', 'INDUSTRIAL', 'MILITARY', 'OFFICE', 'RELIGION', 'SCHOOL', 'UNSPECIFIED', 'RUIN', 'UNAVAILABLE' ],
 		periods: [ 'ANYTIME', 'SPRING', 'SUMMER', 'AUTUMN', 'WINTER' ],
 		difficulties: [ 1, 2, 3, 4, 5 ],
 		ratings: [ 1, 2, 3, 4, 5 ]
