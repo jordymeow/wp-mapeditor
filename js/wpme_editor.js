@@ -297,16 +297,17 @@
 		**************************************************************************************************/
 
 		jQuery(document).keyup(function (e) {
-			if (e.keyCode == 69) { // e
+			var hasModals = jQuery('.modal:visible').length > 0;
+			if (!hasModals && e.keyCode == 69) { // e
 				if ($scope.editor.selectedLocation) {
 					$scope.onEditLocationClick();
 					$scope.$apply();
 				}
 			}
-			else if (e.keyCode == 27) { // escape
+			else if (hasModals && e.keyCode == 27) { // escape
 				jQuery('.modal').modal('hide');
 			}
-			else if (e.keyCode == 65) { // a
+			else if (!hasModals && e.keyCode == 65) { // a
 				if (!$scope.editor.selectedLocation) {
 					$scope.onAddLocationClick();
 					$scope.$apply();
