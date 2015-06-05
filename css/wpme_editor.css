@@ -190,5 +190,9 @@ isteven-multi-select {
 	.modal-dialog {
 		  margin: 100px 40px 0px 40px;
 	}
+
+	.modal-backdrop {
+		display: none !important;
+	}
 	
 }
