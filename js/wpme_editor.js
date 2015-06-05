@@ -138,7 +138,7 @@
 		}
 
 		$scope.mapSelect = function (map) {
-			if ($scope.mostRecentMapId == map.id)
+			if ($scope.mapSelectMode === 'single' && $scope.mostRecentMapId == map.id)
 				return;
 			var map = map;
 			$scope.isLoadingMap = true;
