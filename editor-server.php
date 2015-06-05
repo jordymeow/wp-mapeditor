@@ -45,6 +45,7 @@ class Meow_MapEditor_Server extends Meow_MapEditor {
 	}
 
 	function admin_head() {
+		echo '<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0, user-scalable=no, minimal-ui"><meta name="apple-mobile-web-app-capable" content="yes">';
 		echo '<script type="text/javascript">window.gmap = { plugdir: \'' . plugin_dir_url( __FILE__ ) . '\' }</script>';
 	}
 
