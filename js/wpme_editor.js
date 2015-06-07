@@ -44,7 +44,7 @@
 			EDITOR CONTROLLER
 	**************************************************************************************************/
 
-	function EditorCtrl($scope, $location, $timeout, $filter, $log, $http, $q) {
+	function EditorCtrl($scope, $location, $timeout, $filter, $log, $http, $q, $interval) {
 		$scope.maps = [];
 		$scope.selectedMaps = [];
 		$scope.mostRecentMapId = [];
@@ -72,7 +72,8 @@
 			hoveredLocation: null,
 			selectedLocation: null,
 			editLocation: null, // location being edited
-			distanceFromSelected: null
+			distanceFromSelected: null,
+			isAutoTracking: false
 		};
 
 		// Import / Export
@@ -655,18 +656,42 @@
 			$scope.$apply();
 		}
 
-		var activeCurrentPosition = function () {
+		var activeCurrentPosition = function (fn) {
 			navigator.geolocation.getCurrentPosition(function (pos) {
 				var crd = pos.coords;
-				console.log('Your current position is: ', crd.latitude, crd.longitude);
-			}, function () {
+				fn(crd.latitude, crd.longitude);
+				//console.log('Your current position is: ', crd.latitude, crd.longitude);
+			}, function (err) {
 				console.warn('ERROR(' + err.code + '): ' + err.message);
 			}, {
 				enableHighAccuracy: true,
-				timeout: 5000,
+				timeout: 500,
 				maximumAge: 0
 			});
 		}
+
+		function currentPositionTick() {
+
+			if ($scope.editor.isAutoTracking) {
+				activeCurrentPosition(function (lat, lng) {
+					if (!$scope.editor.selectedLocation)
+						gmap.setCurrentUserPost(lat, lng);
+				});
+			}
+		}
+
+		$scope.toggleAutoTracking = function () {
+			$scope.editor.isAutoTracking = !$scope.editor.isAutoTracking;
+			if ($scope.editor.isAutoTracking) {
+				$scope.trackTickPromise = $interval(currentPositionTick, 1000, 0);
+			}
+			else if ($scope.trackTickPromise) {
+				gmap.setCurrentUserPost(null);
+				$interval.cancel($scope.trackTickPromise);
+				$scope.trackTickPromise = undefined;
+			}
+			
+		};
 
 		/**************************************************************************************************
 			INIT

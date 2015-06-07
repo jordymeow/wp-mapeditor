@@ -19,6 +19,7 @@
 
 	var map;
 	var icon_pin;
+	var icon_pin_current;
 	var icon_pin_selected;
 	var icon_pin_exclamation;
 	var icon_pin_draggable;
@@ -27,6 +28,7 @@
 	var icons_period = {};
 	var size = 20;
 	var scaledSize = 20;
+	var localMarker = null;
 
 	w.gmap.onInit = function(div, init, click) {
 
@@ -52,6 +54,12 @@
 			google.maps.event.addListener(map, 'click', function() {
 				click();
 			});
+			icon_pin_current = {
+				url: w.gmap.plugdir + 'icons/current.png',
+				anchor: new google.maps.Point(10, 10),
+				size: new google.maps.Size(size, size),
+				scaledSize: new google.maps.Size(scaledSize, scaledSize)
+			};
 			icon_pin = {
 				url: w.gmap.plugdir + 'icons/pin.png',
 				anchor: new google.maps.Point(10, 10),
@@ -179,6 +187,26 @@
 
 	w.gmap.goTo = function(location) {
 		map.panTo(location.marker.getPosition());
+	}
+
+	w.gmap.setCurrentUserPost = function(lat, lng) {
+		var pos = new google.maps.LatLng(lat, lng, true);
+		if (!lat) {
+			localMarker.setMap(null);
+			localMarker = null;
+			return;
+		}
+		if (!localMarker) {
+			localMarker = new google.maps.Marker({
+				position: pos,
+				map: map
+			});
+			localMarker.setIcon(icon_pin_current);
+		}
+		else {
+			localMarker.setPosition(pos);
+		}
+		map.panTo(pos);
 	}
 
 	w.gmap.add = function(location, mode, mouseover, mouseout, click) {

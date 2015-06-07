@@ -92,6 +92,10 @@
 	<div id="wpme-map"></div>
 	<nav id="wme-navbar-footer">
 		<div class="pull-right">
+			<a type="button" href="" ng-click="toggleAutoTracking()">
+				<span ng-show="editor.isAutoTracking">Tracking ON</span>
+				<span ng-show="!editor.isAutoTracking">Tracking OFF</span>
+			</a>
 			<a type="button" href="" ng-disabled="selectedMaps.length < 1" ng-click="onImportExportClick()">
 				<span class="glyphicon glyphicon-flash"></span> Import / Export
 			</a>
