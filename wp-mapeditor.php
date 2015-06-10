@@ -3,12 +3,14 @@
 Plugin Name: WP Map Editor
 Plugin URI: http://apps.meow.fr
 Description: Create and browse your maps using your WordPress installation.
-Version: 0.0.1
+Version: 0.0.2
 Author: Jordy Meow
 Author URI: http://apps.meow.fr
 */
 
 class Meow_MapEditor {
+
+	public $version = '0.0.2';
 
 	public function __construct() {
 		add_action( 'init', array( $this, 'init' ) );
@@ -18,11 +20,61 @@ class Meow_MapEditor {
 		add_action( 'save_post', array( $this, 'save_location_metaboxes' ), 1, 2 );
 	}
 
-	function init() {
-		$this->create_db();
-		$this->create_infrastructure();
-		$this->create_roles();
+	public static function activate() {
+		Meow_MapEditor::create_db();
+		//$this->create_infrastructure();
+		Meow_MapEditor::create_roles();
+	}
 
+	/***********************
+		ROLES AND CAPABILITY
+	************************/
+
+	public static function create_roles() {
+		$capabilities = array( 'publish','delete','delete_private','delete_published','edit','edit_private','edit_published','read_private' );
+		
+		// For Map Editor
+		remove_role( "map_editor" );
+		$maprole = add_role( "map_editor" , "Map Editor" );
+		$maprole->add_cap( "read" );
+		$maprole->add_cap( "manage_categories" );
+		foreach ( $capabilities as $cap ) {
+			$maprole->add_cap( "{$cap}_maps" );
+		}
+
+		// For Admin
+		$adminrole = get_role( 'administrator' );
+		$capabilities_admin = array_merge( array( 'edit_others', 'delete_others' ), $capabilities );
+		foreach ( $capabilities_admin as $cap ) {
+			$adminrole->add_cap( "{$cap}_maps" );
+		}
+	}
+
+	public static function get_db_role() {
+		global $wpdb;
+		$table_name = $wpdb->prefix . "wme_role"; 
+		return $table_name;
+	}
+
+	/****************************
+		DATABASE
+	****************************/
+
+	public static function create_db() {
+		$table_name = Meow_MapEditor::get_db_role();
+		$sql = "CREATE TABLE $table_name (
+			id BIGINT(20) NOT NULL AUTO_INCREMENT,
+			user_id BIGINT(20) NULL,
+			term_id BIGINT(20) NULL,
+			role TINYINT DEFAULT '6',
+			UNIQUE KEY id (id)
+		);";
+		require_once(ABSPATH . 'wp-admin/includes/upgrade.php');
+		dbDelta($sql);
+	}
+
+	function init() {
+		$this->create_infrastructure();
 		if ( is_admin() ) {
 			// Friendly display of the Locations
 			add_action( 'admin_init', array( $this, 'dashboard_meta' ) );
@@ -349,53 +401,6 @@ class Meow_MapEditor {
     return $input;
 	}
 
-	/***********************
-		ROLES AND CAPABILITY
-	************************/
-
-	function create_roles() {
-		$capabilities = array( 'publish','delete','delete_private','delete_published','edit','edit_private','edit_published','read_private' );
-		
-		// For Map Editor
-		remove_role( "map_editor" );
-		$maprole = add_role( "map_editor" , "Map Editor" );
-		$maprole->add_cap( "read" );
-		$maprole->add_cap( "manage_categories" );
-		foreach ( $capabilities as $cap ) {
-			$maprole->add_cap( "{$cap}_maps" );
-		}
-
-		// For Admin
-		$adminrole = get_role( 'administrator' );
-		$capabilities_admin = array_merge( array( 'edit_others', 'delete_others' ), $capabilities );
-		foreach ( $capabilities_admin as $cap ) {
-			$adminrole->add_cap( "{$cap}_maps" );
-		}
-	}
-
-	function get_db_role() {
-		global $wpdb;
-		$table_name = $wpdb->prefix . "wme_role"; 
-		return $table_name;
-	}
-
-	/****************************
-		DATABASE
-	****************************/
-
-	function create_db() {
-		$table_name = $this->get_db_role();
-		$sql = "CREATE TABLE $table_name (
-			id BIGINT(20) NOT NULL AUTO_INCREMENT,
-			user_id BIGINT(20) NULL,
-			term_id BIGINT(20) NULL,
-			role TINYINT DEFAULT '6',
-			UNIQUE KEY id (id)
-		);";
-		require_once(ABSPATH . 'wp-admin/includes/upgrade.php');
-		dbDelta($sql);
-	}
-
 	/****************************
 		CREATES SENTENCE AND RULE
 	****************************/
@@ -488,5 +493,7 @@ function meow_map_editor_init() {
 		}
 	}
 }
+
+register_activation_hook( WP_PLUGIN_DIR . '/wp-mapeditor/wp-mapeditor.php', array( 'Meow_MapEditor', 'activate' ) );
 
 ?>

@@ -64,8 +64,8 @@ class Meow_MapEditor_Server extends Meow_MapEditor {
 		wp_enqueue_script( 'angular-ladda', plugins_url( '/js/angular-ladda.min.js', __FILE__ ), array( 'angular', 'ladda-js' ), "0.0.1", false );
 
 		// Editor
-		wp_enqueue_script( 'wpme-gmap', plugins_url( '/js/wpme_gmap.js', __FILE__ ), array( 'gmap' ), "0.0.1", true );
-		wp_enqueue_script( 'wpme-editor', plugins_url( '/js/wpme_editor.js', __FILE__ ), array( 'bootstrap', 'angular', 'ladda-js', 'gmap', 'wpme-gmap' ), "0.0.1", true );
+		wp_enqueue_script( 'wpme-gmap', plugins_url( '/js/wpme_gmap.js', __FILE__ ), array( 'gmap' ), $this->version, true );
+		wp_enqueue_script( 'wpme-editor', plugins_url( '/js/wpme_editor.js', __FILE__ ), array( 'bootstrap', 'angular', 'ladda-js', 'gmap', 'wpme-gmap' ), $this->version, true );
 	}
 
 	function map_editor_css() {

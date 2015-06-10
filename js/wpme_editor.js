@@ -319,7 +319,7 @@
 		jQuery('#wpme-import-export .nav-tabs a').click(function (e) {
 			e.preventDefault();
 			jQuery(this).tab('show');
-		})
+		});
 
 		document.oncontextmenu = function() {
 			return false;
@@ -683,7 +683,7 @@
 		$scope.toggleAutoTracking = function () {
 			$scope.editor.isAutoTracking = !$scope.editor.isAutoTracking;
 			if ($scope.editor.isAutoTracking) {
-				$scope.trackTickPromise = $interval(currentPositionTick, 1000, 0);
+				$scope.trackTickPromise = $interval(currentPositionTick, 2000, 0);
 			}
 			else if ($scope.trackTickPromise) {
 				gmap.setCurrentUserPost(null);

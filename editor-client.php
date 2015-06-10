@@ -29,7 +29,7 @@
 				tick-property="ticked">
 			</div>
 
-			<div class="btn-group" ng-disabled="selectedMaps.length < 1">
+			<div class="btn-group" ng-disabled="selectedMaps.length < 1 || isLoadingMap">
 				<button type="button" class="btn btn-primary btn-sm dropdown-toggle" data-toggle="dropdown" aria-expanded="false">
 					<span ng-if="displayMode === 'status'">
 						<span class="glyphicon glyphicon-flag"></span> <span class="hidden-xs">Status</span> <span class="caret"></span>
@@ -47,7 +47,7 @@
 					<li><a href="#" ng-click="setDisplayMode('period')"><span class="glyphicon glyphicon-tree-conifer"></span> Period</a></li>
 				</ul>
 			</div>
-			<button type="button" ng-disabled="selectedMaps.length < 1 || editor.selectedLocation" class="btn btn-success btn-sm navbar-btn" ng-click="onAddLocationClick()">
+			<button type="button" ng-disabled="selectedMaps.length < 1 || editor.selectedLocation || isLoadingMap" class="btn btn-success btn-sm navbar-btn" ng-click="onAddLocationClick()">
 				<span class="glyphicon glyphicon-plus"></span> <span class="hidden-xs">Location</span>
 			</button>
 <!-- 			<button type="button" class="btn btn-success btn-sm navbar-btn">
@@ -58,36 +58,33 @@
 	</nav>
 	<div id="wpme-info" class="ng-hide" ng-show="editor.selectedLocation">
 		<div class="header">
-			<span class="name">{{editor.selectedLocation.name}}</span><br />
-			<span class="coordinates">
-				<a target="_blank" href="https://www.google.com/maps/dir//{{editor.selectedLocation.coordinates}}/@{{editor.selectedLocation.coordinates}}">
+			<img width="20" src="<?php echo plugin_dir_url( __FILE__ ); ?>/icons/{{editor.selectedLocation.status}}.png" title="{{editor.selectedLocation.status}}">
+			<img width="20" src="<?php echo plugin_dir_url( __FILE__ ); ?>/icons/{{editor.selectedLocation.type}}.png" title="{{editor.selectedLocation.type}}">
+			<span class="coordinates pull-right">
+				<a target="_blank" href="https://www.google.com/maps/dir/{{editor.selectedLocation.coordinates}}//@{{editor.selectedLocation.coordinates}}">
 					{{editor.selectedLocation.coordinates}}
 				</a>
 			</span>
 		</div>
-		<div class="info">
-			Status: {{editor.selectedLocation.status}}<br />
-			Type: {{editor.selectedLocation.type}}<br />
-			Rating: {{editor.selectedLocation.rating}}<br />
-			Difficulty: {{editor.selectedLocation.difficulty}}<br />
-		</div>
+		<div class="name">{{editor.selectedLocation.name}}</div>
 		<div class="actions">
-			<button ladda="isSavingLocation" ng-disabled="isDragging" type="button" class="btn btn-primary btn-sm navbar-btn" ng-click="onEditLocationClick()">
-				<span class="glyphicon glyphicon-pencil"></span>
-			</button>
-			<button ladda="isSavingLocation" ng-hide="isDragging" type="button" class="btn btn-primary btn-sm navbar-btn" ng-click="startDraggable()">
+			<button ladda="isSavingLocation" ng-disabled="isDragging" type="button" class="btn btn-success btn-sm" ng-click="onEditLocationClick()">
+					<span class="glyphicon glyphicon-pencil"></span>
+				</button>
+			<button ladda="isSavingLocation" ng-hide="isDragging" type="button" class="btn btn-primary btn-sm" ng-click="startDraggable()">
 				<span class="glyphicon glyphicon glyphicon-move"></span>
 			</button>
-			<button ladda="isSavingLocation" ng-show="isDragging" type="button" class="btn btn-primary btn-sm navbar-btn" ng-click="saveDraggable()">
+			<button ladda="isSavingLocation" ng-show="isDragging" type="button" class="btn btn-primary btn-sm" ng-click="saveDraggable()">
 				<span class="glyphicon glyphicon glyphicon-ok"></span>
 			</button>
-			<button ladda="isSavingLocation" ng-disabled="isDragging" type="button" class="btn btn-success btn-sm">
+<!-- 			<button ladda="isSavingLocation" ng-disabled="isDragging" type="button" class="btn btn-success btn-sm">
 				<span class="glyphicon glyphicon-asterisk"></span>
-			</button>
-			<button ladda="isSavingLocation" ng-disabled="isDragging" type="button" class="btn btn-danger btn-sm" ng-click="deleteLocation()">
+			</button> -->
+			<button ladda="isSavingLocation" ng-disabled="isDragging" type="button" class="btn btn-danger btn-sm pull-right" ng-click="deleteLocation()">
 				<span class="glyphicon glyphicon-trash"></span>
 			</button>
 		</div>
+		
 	</div>
 	<div id="wpme-map"></div>
 	<nav id="wme-navbar-footer">
