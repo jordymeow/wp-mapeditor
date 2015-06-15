@@ -29,6 +29,7 @@
 	var size = 20;
 	var scaledSize = 20;
 	var localMarker = null;
+	var imageMarkers = [];
 
 	w.gmap.onInit = function(div, init, click) {
 
@@ -210,6 +211,25 @@
 			localMarker.setPosition(pos);
 		}
 		map.panTo(pos);
+	}
+
+	w.gmap.resetImages = function() {
+		for (var c in imageMarkers) {
+			imageMarkers[c].onRemove();
+		}
+		imageMarkers = [];
+	}
+
+	w.gmap.addImage = function(id, img, title, url, lat, lng) {
+		var imageMarker = new RichMarker({
+			shadow: "none",
+			flat: true,
+			position: new google.maps.LatLng(lat, lng),
+			map: map,
+			content: '<div class="image-marker">' +
+				'<a target="_blank" title="' + title + '" href="' + url + '"><img src="' + img + '" /></a></div>'
+		});
+		imageMarkers.push(imageMarker);
 	}
 
 	w.gmap.add = function(location, mode, mouseover, mouseout, click) {

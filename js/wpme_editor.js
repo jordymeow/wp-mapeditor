@@ -693,6 +693,34 @@
 			
 		};
 
+		$scope.onShowPhotosClick = function () {
+			gmap.resetImages();
+			var gps = roundCoordinates(gmap.getCenter());
+			gps = gps.split(',');
+			var year = (new Date()).getFullYear() - 8;
+			$scope.isLoadingMap = true;
+			$http.jsonp('https://api.flickr.com/services/rest/?method=flickr.photos.search&media=photos&extras=date_taken,path_alias,url_o,url_q,geo,owner_name&per_page=50&format=json&jsoncallback=JSON_CALLBACK', {
+				params: {
+					lat: gps[0],
+					lon: gps[1],
+					radius: 32,
+					min_taken_date: year + '0101',
+					api_key: '909dd0db6a86ed252cfc6f408d161d8c'
+				}
+			}).success(function (reply, status) {
+				var data = angular.fromJson(reply);
+				for (var c in data.photos.photo) {
+					var current = data.photos.photo[c];
+					var url = 'http://flickr.com/photo.gne?id=' + current.id;
+					gmap.addImage(parseInt(current.id), current.url_q, current.title, url, current.latitude, current.longitude );
+				}
+				$scope.isLoadingMap = false;
+			}).error(function (reply, status, headers) {
+				$log.error("Could not retrieve the photos from Flickr.");
+				$scope.isLoadingMap = false;
+			});
+		}
+
 		/**************************************************************************************************
 			INIT
 		**************************************************************************************************/

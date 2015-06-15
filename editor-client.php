@@ -56,10 +56,12 @@
 		</div>
 
 	</nav>
-	<div id="wpme-info" class="ng-hide" ng-show="editor.selectedLocation">
+	<div id="wpme-info" class="ng-hide" ng-if="editor.selectedLocation">
 		<div class="header">
-			<img width="20" src="<?php echo plugin_dir_url( __FILE__ ); ?>/icons/{{editor.selectedLocation.status}}.png" title="{{editor.selectedLocation.status}}">
-			<img width="20" src="<?php echo plugin_dir_url( __FILE__ ); ?>/icons/{{editor.selectedLocation.type}}.png" title="{{editor.selectedLocation.type}}">
+			<div ng-if="editor.selectedLocation">
+				<img width="20" src="<?php echo plugin_dir_url( __FILE__ ); ?>/icons/{{editor.selectedLocation.status}}.png" title="{{editor.selectedLocation.status}}">
+				<img width="20" src="<?php echo plugin_dir_url( __FILE__ ); ?>/icons/{{editor.selectedLocation.type}}.png" title="{{editor.selectedLocation.type}}">
+			</div>
 			<span class="coordinates pull-right">
 				<a target="_blank" href="https://www.google.com/maps/dir/{{editor.selectedLocation.coordinates}}//@{{editor.selectedLocation.coordinates}}">
 					{{editor.selectedLocation.coordinates}}
@@ -89,6 +91,9 @@
 	<div id="wpme-map"></div>
 	<nav id="wme-navbar-footer">
 		<div class="pull-right">
+			<a type="button" href="" ng-disabled="selectedMaps.length < 1" ng-click="onShowPhotosClick()">
+				<span class="glyphicon glyphicon-camera"></span> Show Photos
+			</a>
 			<a type="button" href="" ng-click="toggleAutoTracking()">
 				<span ng-show="editor.isAutoTracking">Tracking ON</span>
 				<span ng-show="!editor.isAutoTracking">Tracking OFF</span>
