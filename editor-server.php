@@ -4,16 +4,18 @@ class Meow_MapEditor_Server extends Meow_MapEditor {
 
 	public function __construct() {
 		parent::__construct();
-		add_action( 'admin_menu', array( $this, 'admin_menu' ) );
-		add_action( 'delete_post', array( $this, 'delete_post' ) );
-		add_action( 'admin_head', array( $this, 'admin_head' ) );
-		add_action( 'wp_ajax_edit_location', array( $this, 'ajax_edit_location' ) );
-		add_action( 'wp_ajax_add_location', array( $this, 'ajax_add_location' ) );
-		add_action( 'wp_ajax_delete_location', array( $this, 'ajax_delete_location' ) );
-		add_action( 'wp_ajax_load_locations', array( $this, 'ajax_load_locations' ) );
-		add_action( 'wp_ajax_load_maps', array( $this, 'ajax_load_maps' ) );
-		add_filter( 'list_terms_exclusions', array( $this, 'list_terms_exclusions' ), 10, 2 );
-		add_filter( 'pre_get_posts', array( $this, 'posts_for_current_author' ), 10, 1 );
+		if ( $this->is_pro() || is_super_admin() ) {
+			add_action( 'admin_menu', array( $this, 'admin_menu' ) );
+			add_action( 'delete_post', array( $this, 'delete_post' ) );
+			add_action( 'admin_head', array( $this, 'admin_head' ) );
+			add_action( 'wp_ajax_edit_location', array( $this, 'ajax_edit_location' ) );
+			add_action( 'wp_ajax_add_location', array( $this, 'ajax_add_location' ) );
+			add_action( 'wp_ajax_delete_location', array( $this, 'ajax_delete_location' ) );
+			add_action( 'wp_ajax_load_locations', array( $this, 'ajax_load_locations' ) );
+			add_action( 'wp_ajax_load_maps', array( $this, 'ajax_load_maps' ) );
+			add_filter( 'list_terms_exclusions', array( $this, 'list_terms_exclusions' ), 10, 2 );
+			add_filter( 'pre_get_posts', array( $this, 'posts_for_current_author' ), 10, 1 );
+		}
 	}
 
 	function posts_for_current_author( $query ) {
@@ -46,7 +48,7 @@ class Meow_MapEditor_Server extends Meow_MapEditor {
 
 	function admin_head() {
 		echo '<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0, user-scalable=no, minimal-ui"><meta name="apple-mobile-web-app-capable" content="yes">';
-		echo '<script type="text/javascript">window.gmap = { plugdir: \'' . plugin_dir_url( __FILE__ ) . '\' }</script>';
+		echo '<script type="text/javascript">window.gmap = { plugdir: \'' . plugin_dir_url( __FILE__ ) . '\', is_pro: ' . intval( !!( $this->is_pro() ) ) . ', multimaps: ' . intval( !!( $this->get_option( 'multimaps', 'wme_basics', false ) && $this->is_pro() ) ) . ', allusers: ' . intval( !!( $this->get_option( 'allusers', 'wme_basics', false ) && $this->is_pro() ) ) . ', import: ' . intval( !!( $this->get_option( 'import', 'wme_basics', false ) && $this->is_pro() ) ) . ', export: ' . intval( !!( $this->get_option( 'export', 'wme_basics', false ) && $this->is_pro() ) ) .', flickr_apikey: \'' . $this->get_option( 'flickr_apikey', 'wme_basics', null ) . '\', gmaps_apikey: \'' . $this->get_option( 'gmaps_apikey', 'wme_basics', null ) . '\' }</script>';
 	}
 
 	function map_editor_js() {
@@ -55,7 +57,8 @@ class Meow_MapEditor_Server extends Meow_MapEditor {
 		wp_enqueue_script( 'multi-select', plugins_url( '/js/isteven-multi-select.js', __FILE__ ), array( 'angular' ), "4.0.0", false );
 		
 		// Google Maps
-		wp_enqueue_script( 'gmap', 'https://maps.googleapis.com/maps/api/js?key=AIzaSyAGBDCs9BWk0YVJR8G6B7UA-bd0pZ-9Ywc', array(), '', false );
+		$gmaps_apikey = $this->get_option( 'gmaps_apikey', 'wme_basics', '' );
+		wp_enqueue_script( 'gmap', 'https://maps.googleapis.com/maps/api/js?key=' . $gmaps_apikey, array(), '', false );
 		wp_enqueue_script( 'gmap-richmarker', plugins_url( '/js/richmarker.min.js', __FILE__ ), array( 'gmap' ), '', false );
 
 		// Ladda

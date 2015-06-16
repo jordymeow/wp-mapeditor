@@ -56,12 +56,10 @@
 		</div>
 
 	</nav>
-	<div id="wpme-info" class="ng-hide" ng-if="editor.selectedLocation">
+	<div id="wpme-info" class="ng-hide" ng-show="editor.selectedLocation">
 		<div class="header">
-			<div ng-if="editor.selectedLocation">
-				<img width="20" src="<?php echo plugin_dir_url( __FILE__ ); ?>/icons/{{editor.selectedLocation.status}}.png" title="{{editor.selectedLocation.status}}">
-				<img width="20" src="<?php echo plugin_dir_url( __FILE__ ); ?>/icons/{{editor.selectedLocation.type}}.png" title="{{editor.selectedLocation.type}}">
-			</div>
+			<img width="20" src="<?php echo plugin_dir_url( __FILE__ ); ?>/icons/{{editor.selectedLocation.status}}.png" title="{{editor.selectedLocation.status}}">
+			<img width="20" src="<?php echo plugin_dir_url( __FILE__ ); ?>/icons/{{editor.selectedLocation.type}}.png" title="{{editor.selectedLocation.type}}">
 			<span class="coordinates pull-right">
 				<a target="_blank" href="https://www.google.com/maps/dir/{{editor.selectedLocation.coordinates}}//@{{editor.selectedLocation.coordinates}}">
 					{{editor.selectedLocation.coordinates}}
@@ -91,7 +89,7 @@
 	<div id="wpme-map"></div>
 	<nav id="wme-navbar-footer">
 		<div class="pull-right">
-			<a type="button" href="" ng-disabled="selectedMaps.length < 1" ng-click="onShowPhotosClick()">
+			<a type="button" href="" ng-show="gmap.flickr_apikey" ng-disabled="selectedMaps.length < 1" ng-click="onShowPhotosClick()">
 				<span class="glyphicon glyphicon-camera"></span> Show Photos
 			</a>
 			<a type="button" href="" ng-click="toggleAutoTracking()">
@@ -108,6 +106,21 @@
 		</span>
 	</nav>
 
+</div>
+
+<div class="modal" id="wpme-modal-pro-only">
+	<div class="modal-dialog">
+		<div class="modal-content">
+			<div class="modal-body">
+				<button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+				<h4 style="margin-top: 0px;">Feature not available</h4>
+				<p>This feature is currently disabled. That is either because the feature is disabled in your settings or because a Pro serial key is required.</p>
+			</div>
+			<div class="modal-footer">
+				<button type="button" data-dismiss="modal" class="btn btn-primary pull-right">Close</button>
+		</div>
+		</div>
+	</div>
 </div>
 
 <div class="modal" id="wpme-modal-location">
@@ -199,7 +212,7 @@
 					<li ng-class="{active: ie.isExporting}"><a href="" ng-click="ie.isImporting = false; ie.isExporting = true;">Export</a></li>
 				</ul>
 
-				<div ng-show="ie.isImporting">
+				<div ng-show="ie.isImporting && gmap.import">
 					<p><br />You can import locations from Google Maps through a KML file. If you got a KMZ file, it is a zip. Unzip it, and use the KML file you will find in it.</p>
 					<form>
 						<div class="form-group">
@@ -229,7 +242,7 @@
 					</div>
 				</div>
 
-				<div ng-show="ie.isExporting">
+				<div ng-show="ie.isExporting && gmap.export">
 					<p><br />Working on it! :) There will be KML, CSV. What else do you need?</p>
 				</div>
 				

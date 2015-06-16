@@ -58,6 +58,7 @@
 		$scope.isSavingLocation = false;
 		$scope.isLoadingMap = false;
 		$scope.mapSelectMode = 'single'; // single, multiple
+		$scope.gmap = window.gmap;
 
 		$scope.constants = { 
 			statuses: gmap.statuses,
@@ -132,6 +133,10 @@
 		}
 
 		$scope.toggleSelectMode = function () {
+			if (!$scope.gmap.multimaps) {
+				jQuery('#wpme-modal-pro-only').modal('show');
+				return;
+			}
 			if ($scope.mapSelectMode === 'single')
 				$scope.mapSelectMode = 'multiple';
 			else
@@ -321,9 +326,9 @@
 			jQuery(this).tab('show');
 		});
 
-		document.oncontextmenu = function() {
-			return false;
-		};
+		// document.oncontextmenu = function() {
+		// 	return false;
+		// };
 
 		/**************************************************************************************************
 			DRAG
@@ -385,6 +390,10 @@
 		**************************************************************************************************/
 
 		$scope.onImportExportClick = function () {
+			if (!$scope.gmap.import && !$scope.gmap.import) {
+				jQuery('#wpme-modal-pro-only').modal('show');
+				return;
+			}
 			$scope.ie.file = null;
 			$scope.ie.status = 'DRAFT';
 			$scope.ie.type = 'UNSPECIFIED';
@@ -618,7 +627,7 @@
 			LISTENERS
 		**************************************************************************************************/
 
-		var mapOnClick = function () {
+		var mapOnClick = function (lat, lng) {
 			if ($scope.editor.selectedLocation) {
 				if ($scope.isDragging) {
 					gmap.update($scope.editor.selectedLocation); // Need to reset the location
@@ -628,6 +637,9 @@
 				gmap.setLocationIcon($scope.editor.selectedLocation, $scope.displayMode);
 				$scope.editor.selectedLocation = null;
 				$scope.$apply();
+			}
+			else {
+				gmap.goTo(lat, lng);
 			}
 		}
 
@@ -705,7 +717,7 @@
 					lon: gps[1],
 					radius: 32,
 					min_taken_date: year + '0101',
-					api_key: '909dd0db6a86ed252cfc6f408d161d8c'
+					api_key: gmap.flickr_apikey
 				}
 			}).success(function (reply, status) {
 				var data = angular.fromJson(reply);

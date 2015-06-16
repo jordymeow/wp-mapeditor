@@ -1,23 +1,23 @@
 <?php
 /*
-Plugin Name: WP Map Editor
+Plugin Name: WP MapEditor
 Plugin URI: http://apps.meow.fr
-Description: Create and browse your maps using your WordPress installation.
-Version: 0.0.2
+Description: Create your own maps to plan your future travels and explorations while keeping track of locations you have visited.
+Version: 0.0.1
 Author: Jordy Meow
 Author URI: http://apps.meow.fr
 */
 
 class Meow_MapEditor {
 
-	public $version = '0.0.2';
+	public $version = '0.0.1';
 
 	public function __construct() {
-		add_action( 'init', array( $this, 'init' ) );
-
-		// Metabox (add 'Mistake' in Location + save)
-		add_action( 'add_meta_boxes', array( $this, 'add_location_metaboxes' ) );
-		add_action( 'save_post', array( $this, 'save_location_metaboxes' ), 1, 2 );
+		if ( $this->is_pro() || is_super_admin() ) {
+			add_action( 'init', array( $this, 'init' ) );
+			add_action( 'add_meta_boxes', array( $this, 'add_location_metaboxes' ) );
+			add_action( 'save_post', array( $this, 'save_location_metaboxes' ), 1, 2 );
+		}
 	}
 
 	public static function activate() {
@@ -214,10 +214,84 @@ class Meow_MapEditor {
 			add_post_meta( $post_id, $meta_key, $new_value, true );
 		else if ( $old_value != $new_value )
 			update_post_meta( $post_id, $meta_key, $new_value );
-		/*
 		else if ( $new_value == '' && $old_value )
-		  delete_post_meta( $post_id, $meta_key, $old_value );
-		*/
+			delete_post_meta( $post_id, $meta_key, $old_value );
+	}
+
+	function get_option( $option, $section, $default = '' ) {
+		$options = get_option( $section );
+		if ( isset( $options[$option] ) ) {
+			if ( $options[$option] == "off" )
+				return false;
+			if ( $options[$option] == "on" )
+				return true;
+			return $options[$option];
+		}
+		return $default;
+	}
+
+	/**
+	 *
+	 * PRO 
+	 * Come on, it's not so expensive :'(
+	 *
+	 */
+
+	function is_pro() {
+		$validated = get_transient( 'wme_validated' );
+		if ( $validated ) {
+			$serial = get_option( 'wme_pro_serial');
+			return !empty( $serial );
+		}
+		$subscr_id = get_option( 'wme_pro_serial', "" );
+		if ( !empty( $subscr_id ) )
+			return validate_pro( wme_getoption( "subscr_id", "wme_pro", array() ) );
+		return false;
+	}
+
+	function validate_pro( $subscr_id ) {
+		if ( empty( $subscr_id ) ) {
+			delete_option( 'wme_pro_serial', "" );
+			delete_option( 'wme_pro_status', "" );
+			set_transient( 'wme_validated', false, 0 );
+			return false;
+		}
+		require_once $this->get_wordpress_root() . WPINC . '/class-IXR.php';
+		require_once $this->get_wordpress_root() . WPINC . '/class-wp-http-ixr-client.php';
+		$client = new WP_HTTP_IXR_Client( 'http://apps.meow.fr/xmlrpc.php' );
+		if ( !$client->query( 'meow_sales.auth', $subscr_id, 'retina', get_site_url() ) ) { 
+			update_option( 'wme_pro_serial', "" );
+			update_option( 'wme_pro_status', "A network error: " . $client->getErrorMessage() );
+			set_transient( 'wme_validated', false, 0 );
+			return false;
+		}
+		$post = $client->getResponse();
+		if ( !$post['success'] ) {
+			if ( $post['message_code'] == "NO_SUBSCRIPTION" ) {
+				$status = __( "Your serial does not seem right." );
+			}
+			else if ( $post['message_code'] == "NOT_ACTIVE" ) {
+				$status = __( "Your subscription is not active." );
+			}
+			else if ( $post['message_code'] == "TOO_MANY_URLS" ) {
+				$status = __( "Too many URLs are linked to your subscription." );
+			}
+			else {
+				$status = "There is a problem with your subscription.";
+			}
+			update_option( 'wme_pro_serial', "" );
+			update_option( 'wme_pro_status', $status );
+			set_transient( 'wme_validated', false, 0 );
+			return false;
+		}
+		set_transient( 'wme_validated', $subscr_id, 3600 * 24 * 100 );
+		update_option( 'wme_pro_serial', $subscr_id );
+		update_option( 'wme_pro_status', __( "Your subscription is enabled." ) );
+		return true;
+	}
+
+	function get_wordpress_root() {
+		return ABSPATH;
 	}
 
 	/******************************
@@ -325,68 +399,42 @@ class Meow_MapEditor {
 		METABOXES AND METADATA FOR SENTENCE
 	**************************************/
 
-	// function default_title( $post_title, $post ) {
-	// 	if ( $post->post_type !== 'map' )
-	// 		return $post_title;
-	// 	return "N/A";
-	// }
-
 	// Add the metaboxes for Location
 	function add_location_metaboxes() {
-	// 	add_meta_box( 'wpme_maps_map', 'Location', array( $this, 'display_map_metabox' ), 'map', 'normal', 'high' );
-	// 	add_meta_box( 'wpme_maps_mistake', 'Mistake(s)', array( $this, 'display_mistake_metabox' ), 'map', 'normal', 'high' );
-	// 	add_meta_box( 'wpme_maps_correction', 'Correction', array( $this, 'display_correction_metabox' ), 'map', 'normal', 'high' );
+		add_meta_box( 'wpme_maps_map', 'GPS Coordinates', array( $this, 'display_map_coordinates' ), 'location', 'side', 'high' );
 	}
 
-	// function display_map_metabox() {
-	// 	global $post;
-	// 	echo '<input type="hidden" name="map_meta_noncename" id="map_meta_noncename" value="' . 
-	// 	wp_create_nonce( plugin_basename(__FILE__) ) . '" />';
-	// 	$mistake = get_post_meta($post->ID, '_map', true);
-	// 	echo '<input type="text" name="_map" value="' . $mistake  . '" class="widefat" />';
-	// 	echo '<p class="description">Words must be separated by a space.</p>';
-	// }
-
-	// // Display the metaboxes for Location
-	// function display_correction_metabox() {
-	// 	global $post;
-	// 	$mistake = get_post_meta( $post->ID, '_correction', true );
-	// 	echo '<input type="text" name="_correction" value="' . $mistake  . '" class="widefat" />';
-	// 	echo '<p class="description">Simply the correction of the map.>';
-	// }
-
-	// // Display the metaboxes for Location
-	// function display_mistake_metabox() {
-	// 	global $post;
-	// 	$mistake = get_post_meta( $post->ID, '_mistake', true );
-	// 	echo '<input type="text" name="_mistake" value="' . $mistake  . '" class="widefat" />';
-	// 	echo '<p class="description">No mistakes? Keep empty. Mistake on the first word? Use 1. Mistakes on 3rd and 4th words? Use 3,4.</p>';
-	// }
+	function display_map_coordinates() {
+		global $post;
+		echo '<input type="hidden" name="map_meta_noncename" id="map_meta_noncename" value="' . 
+		wp_create_nonce( plugin_basename(__FILE__) ) . '" />';
+		$wme_coordinates = get_post_meta($post->ID, 'wme_coordinates', true);
+		echo '<input type="text" name="wme_coordinates" value="' . $wme_coordinates  . '" class="widefat" />';
+		echo '<p class="description">Must be that format: 35.0116,135.7680</p>';
+	}
 
 	// // Save the metaboxes for Location
 	function save_location_metaboxes( $post_id, $post ) {
-	// 	if ( $post->post_type == 'revision' )
-	// 			return;
-	// 	if ( !isset( $_POST[ 'map_meta_noncename'] ) || !wp_verify_nonce( $_POST[ 'map_meta_noncename'],  plugin_basename( __FILE__ ) ) )
-	// 		return $post->ID;
-	// 	if ( !current_user_can( 'edit_post', $post->ID ))
-	// 		return $post->ID;
+		if ( $post->post_type == 'revision' )
+				return;
+		if ( !isset( $_POST[ 'map_meta_noncename'] ) || !wp_verify_nonce( $_POST[ 'map_meta_noncename'],  plugin_basename( __FILE__ ) ) )
+			return $post->ID;
+		if ( !current_user_can( 'edit_post', $post->ID ))
+			return $post->ID;
 
-	// 	// The meta for Location
-	// 	$events_meta['_map'] = sanitize_text_field( $_POST['_map'] );
-	// 	$events_meta['_correction'] = sanitize_text_field( $_POST['_correction'] );
-	// 	$events_meta['_mistake'] = sanitize_text_field( $_POST['_mistake'] );
+		// The meta for Location
+		$fields['wme_coordinates'] = sanitize_text_field( $_POST['wme_coordinates'] );
 
-	// 	// Create, update or delete
-	// 	foreach ( $events_meta as $key => $value ) {
-	// 		$value = implode(',', (array)$value); // If $value is an array, make it a CSV (unlikely)
-	// 		if ( get_post_meta( $post->ID, $key, FALSE ) )
-	// 			update_post_meta($post->ID, $key, $value);
-	// 		else
-	// 			add_post_meta($post->ID, $key, $value);
-	// 		if ( !$value ) 
-	// 			delete_post_meta( $post->ID, $key );
-	// 	}
+		// Create, update or delete
+		foreach ( $fields as $key => $value ) {
+			$value = implode(',', (array)$value); // If $value is an array, make it a CSV (unlikely)
+			if ( get_post_meta( $post->ID, $key, FALSE ) )
+				update_post_meta($post->ID, $key, $value);
+			else
+				add_post_meta($post->ID, $key, $value);
+			if ( !$value ) 
+				delete_post_meta( $post->ID, $key );
+		}
 	}
 
 	/*************************
@@ -402,7 +450,7 @@ class Meow_MapEditor {
 	}
 
 	/****************************
-		CREATES SENTENCE AND RULE
+		CREATES LOCATIONS AND MAPS
 	****************************/
 
 	function create_infrastructure() {
@@ -479,10 +527,11 @@ add_action( 'plugins_loaded', 'meow_map_editor_init' );
 function meow_map_editor_init() {
 	if ( class_exists( 'Meow_MapEditor' ) ) {
 		if ( is_admin() ) {
+			include "jordy_meow_footer.php";
 			include "editor-server.php";
 			if ( is_super_admin() ) {
-				include "admin-tools.php";
-				new Meow_MapEditor_Tools;
+				include "admin-settings.php";
+				new Meow_MapEditor_Settings;
 			}
 			else {
 				new Meow_MapEditor_Server;
