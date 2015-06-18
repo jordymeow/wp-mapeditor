@@ -22,7 +22,6 @@ class Meow_MapEditor {
 
 	public static function activate() {
 		Meow_MapEditor::create_db();
-		//$this->create_infrastructure();
 		Meow_MapEditor::create_roles();
 	}
 
@@ -76,7 +75,6 @@ class Meow_MapEditor {
 	function init() {
 		$this->create_infrastructure();
 		if ( is_admin() ) {
-			// Friendly display of the Locations
 			add_action( 'admin_init', array( $this, 'dashboard_meta' ) );
 			add_filter( 'manage_location_posts_columns', array( $this, 'manage_location_posts_columns' ) );
 			add_filter( 'manage_location_posts_custom_column', array( $this, 'manage_location_posts_custom_column' ), 10, 2 );

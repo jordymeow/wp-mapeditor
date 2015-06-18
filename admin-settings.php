@@ -44,14 +44,14 @@ class Meow_MapEditor_Settings extends Meow_MapEditor_Server {
                 array(
                     'name' => 'gmaps_apikey',
                     'label' => __( 'Google Maps API key', 'wp-mapeditor' ),
-                    'desc' => __( '<br />You can use Google Maps without an API KEY but it might stop working after a while. To make sure that it keeps working, <a href="https://developers.google.com/maps/signup" target="_blank">create an API key</a> (it is free). The referrer needs to be: <b>' . get_site_url() . '/wp-admin/edit.php?post_type=location&page=map_editor</b>', 'wp-mapeditor' ),
+                    'desc' => __( '<br />You can use Google Maps without an API KEY but it might stop working after a while. To make sure that it keeps working, <a href="https://developers.google.com/maps/signup" target="_blank">create an API key</a> (it is free). The referrer needs to be: <b>' . get_site_url() . '/wp-admin/admin.php?page=map_editor</b>', 'wp-mapeditor' ),
                     'type' => 'text',
                     'default' => ""
                 ),
                 array(
                     'name' => 'flickr_apikey',
                     'label' => __( 'Flickr API key', 'wp-mapeditor' ),
-                    'desc' => __( '<br />If set, you will be able to see what photos have been taken on the map.', 'wp-mapeditor' ),
+                    'desc' => __( '<br />If set, you will be able to see what photos have been taken on the map. You can get a key <a href="https://www.flickr.com/services/apps/create/">here</a>.', 'wp-mapeditor' ),
                     'type' => 'text',
                     'default' => ""
                 ),

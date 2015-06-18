@@ -48,4 +48,3 @@ None.
 == Screenshots ==
 
 1. Map Editor
-2. Basic Settings
