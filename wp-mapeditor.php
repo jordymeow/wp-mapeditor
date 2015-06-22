@@ -18,11 +18,102 @@ class Meow_MapEditor {
 			add_action( 'add_meta_boxes', array( $this, 'add_location_metaboxes' ) );
 			add_action( 'save_post', array( $this, 'save_location_metaboxes' ), 1, 2 );
 		}
+		//add_action( 'the_post', array( $this, 'modify_the_post' ) );
+		add_action( 'wp_head', array( $this, 'wp_head_default_css' ) );
+		add_filter( 'the_content', array( $this, 'modify_the_content' ), 1, 2 );
+		add_filter( 'the_post_thumbnail', array( $this, 'modify_the_post_thumbnail' ), 1, 2 );
 	}
 
 	public static function activate() {
 		Meow_MapEditor::create_db();
 		Meow_MapEditor::create_roles();
+	}
+
+	/***********************
+		DISPLAY
+	************************/
+
+	function get_upload_root()
+	{
+		$uploads = wp_upload_dir();
+		return $uploads['basedir'];
+	}
+
+	function get_location_info( $id ) {
+		$type = get_post_meta( $id, 'wme_type', true );
+		$period = get_post_meta( $id, 'wme_period', true );
+		$status = get_post_meta( $id, 'wme_status', true );
+		$rating = get_post_meta( $id, 'wme_rating', true );
+		$coordinates = get_post_meta( $id, 'wme_coordinates', true );
+		$difficulty = get_post_meta( $id, 'wme_difficulty', true );
+		return array(
+			'type' => $type,
+			'period' => $period,
+			'status' => $status,
+			'rating' => $rating,
+			'coordinates' => $coordinates,
+			'difficulty' => $difficulty
+		);
+	}
+
+	function wp_head_default_css() {
+		echo '
+		<style>
+			.wme-info {
+				text-align: center;
+				border: 1px solid rgb(208, 208, 208);
+				padding: 5px;
+				margin-bottom: 20px;
+			}
+
+			.wme-info ul {
+				list-style-type: none;
+				margin: 0px;
+			}
+		</style>
+		';
+	}
+
+	function modify_the_content( $post ) {
+
+		if ( get_post_type( $post ) != 'location' ) {
+			return;
+		}
+
+		$id = get_the_id();
+		$thumb = get_the_post_thumbnail( $id );
+		$locinfo = $this->get_location_info( $id );
+
+		if ( empty( $thumb ) && !empty( $locinfo['coordinates'] ) ) {
+			if ( !file_exists( trailingslashit( $this->get_upload_root() ) . "wme-tmp" ) )
+				mkdir( trailingslashit( $this->get_upload_root() ) . "wme-tmp" );
+			$file = tempnam( trailingslashit( $this->get_upload_root() ) . "wme-tmp", "wme_" );
+			if ( copy( 'http://maps.googleapis.com/maps/api/staticmap?center=' . $locinfo['coordinates'] . '&zoom=14&size=600x600&maptype=terrain&markers=color:red%7Clabel:%7C' . $locinfo['coordinates'], $file ) ) {
+				wp_insert_attachment( array(
+					'post_title' => 'MAP #' . $id,
+					'post_mime_type' => 'image/png',
+					'post_status' => 'inherit'
+				), $file, $id );
+				unlink( $file );
+			}
+		}
+
+		//$html = '<img src=""></img>';
+		$html = $post;
+		$html = $html . '<div class="wme-info">';
+		$html = $html . '<ul>';
+		$html = $html . '<li>Coordinates: ' . $locinfo['coordinates'] . '</li>';
+		$html = $html . '<li>Type: ' . $locinfo['type'] . '</li>';
+		$html = $html . '<li>Status: ' . $locinfo['status'] . '</li>';
+		$html = $html . '<li>Difficulty: ' . $locinfo['difficulty'] . '</li>';
+		$html = $html . '<li>Period: ' . $locinfo['period'] . '</li>';
+		$html = $html . '</ul>';
+		$html = $html . '</div">';
+		return $html;
+	}
+
+	function the_post_thumbnail( $thumb ) {
+		exit;
 	}
 
 	/***********************
