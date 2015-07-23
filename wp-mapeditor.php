@@ -122,7 +122,7 @@ class Meow_MapEditor {
 
 	public static function create_roles() {
 		$capabilities = array( 'publish','delete','delete_private','delete_published','edit','edit_private','edit_published','read_private' );
-		
+
 		// For Map Editor
 		remove_role( "map_editor" );
 		$maprole = add_role( "map_editor" , "Map Editor" );
@@ -142,7 +142,7 @@ class Meow_MapEditor {
 
 	public static function get_db_role() {
 		global $wpdb;
-		$table_name = $wpdb->prefix . "wme_role"; 
+		$table_name = $wpdb->prefix . "wme_role";
 		return $table_name;
 	}
 
@@ -180,7 +180,7 @@ class Meow_MapEditor {
 
 	/******************************
 		DASHBOARD
-	******************************/	
+	******************************/
 
 	function is_map_editor() {
 		global $current_user;
@@ -258,7 +258,7 @@ class Meow_MapEditor {
 
 	/******************************
 		COLUMNS
-	******************************/	
+	******************************/
 
 	function manage_location_posts_columns( $cols ) {
 		$cols["wme_type"] = "Type";
@@ -321,7 +321,7 @@ class Meow_MapEditor {
 
 	/**
 	 *
-	 * PRO 
+	 * PRO
 	 * Come on, it's not so expensive :'(
 	 *
 	 */
@@ -348,7 +348,8 @@ class Meow_MapEditor {
 		require_once $this->get_wordpress_root() . WPINC . '/class-IXR.php';
 		require_once $this->get_wordpress_root() . WPINC . '/class-wp-http-ixr-client.php';
 		$client = new WP_HTTP_IXR_Client( 'http://apps.meow.fr/xmlrpc.php' );
-		if ( !$client->query( 'meow_sales.auth', $subscr_id, 'retina', get_site_url() ) ) { 
+		$client->useragent = 'MeowApps';
+		if ( !$client->query( 'meow_sales.auth', $subscr_id, 'retina', get_site_url() ) ) {
 			update_option( 'wme_pro_serial', "" );
 			update_option( 'wme_pro_status', "A network error: " . $client->getErrorMessage() );
 			set_transient( 'wme_validated', false, 0 );
@@ -469,7 +470,7 @@ class Meow_MapEditor {
 		$table = $this->get_db_role();
 		$user_id = get_current_user_id();
 		$lastticked = get_transient( "wme_lastticked_" . $user_id );
-		$results = $wpdb->get_results( 
+		$results = $wpdb->get_results(
 			"SELECT t.term_id id, t.name name, 0 ticked
 			FROM $table r, $wpdb->terms t
 			WHERE r.term_id = t.term_id"
@@ -495,7 +496,7 @@ class Meow_MapEditor {
 
 	function display_map_coordinates() {
 		global $post;
-		echo '<input type="hidden" name="map_meta_noncename" id="map_meta_noncename" value="' . 
+		echo '<input type="hidden" name="map_meta_noncename" id="map_meta_noncename" value="' .
 		wp_create_nonce( plugin_basename(__FILE__) ) . '" />';
 		$wme_coordinates = get_post_meta($post->ID, 'wme_coordinates', true);
 		echo '<input type="text" name="wme_coordinates" value="' . $wme_coordinates  . '" class="widefat" />';
@@ -521,7 +522,7 @@ class Meow_MapEditor {
 				update_post_meta($post->ID, $key, $value);
 			else
 				add_post_meta($post->ID, $key, $value);
-			if ( !$value ) 
+			if ( !$value )
 				delete_post_meta( $post->ID, $key );
 		}
 	}
@@ -608,7 +609,7 @@ class Meow_MapEditor {
 
 		register_taxonomy( 'map', array( 'location' ), $args );
 	}
-		
+
 }
 
 add_action( 'plugins_loaded', 'meow_map_editor_init' );
