@@ -349,7 +349,7 @@ class Meow_MapEditor {
 		require_once $this->get_wordpress_root() . WPINC . '/class-wp-http-ixr-client.php';
 		$client = new WP_HTTP_IXR_Client( 'http://apps.meow.fr/xmlrpc.php' );
 		$client->useragent = 'MeowApps';
-		if ( !$client->query( 'meow_sales.auth', $subscr_id, 'retina', get_site_url() ) ) {
+		if ( !$client->query( 'meow_sales.auth', $subscr_id, 'map-editor', get_site_url() ) ) {
 			update_option( 'wme_pro_serial', "" );
 			update_option( 'wme_pro_status', "A network error: " . $client->getErrorMessage() );
 			set_transient( 'wme_validated', false, 0 );
