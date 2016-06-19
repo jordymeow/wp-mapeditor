@@ -14,7 +14,7 @@
 				<span ng-show="mapSelectMode === 'multiple'" class="glyphicon glyphicon-globe"></span>
 			</button>
 
-			<div isteven-multi-select id="wme-map-selector" class="btn-sm hidden-xs" style="
+			<div isteven-multi-select id="wme-map-selector" class="btn-sm" style="
 					float: left;
 					margin-top: 5px;
 					margin-left: -9px;
@@ -30,7 +30,7 @@
 				tick-property="ticked">
 			</div>
 
-			<div isteven-multi-select id="wme-status-selector" class="btn-sm" style="
+			<div isteven-multi-select id="wme-status-selector" class="btn-sm hidden-xs" style="
 					float: left;
 					margin-top: 5px;
 					margin-left: -16px;

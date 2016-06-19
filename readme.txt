@@ -5,7 +5,7 @@ Tags: map, maps, editor, google, googlemaps, location, pin, plugin
 License: GPLv2 or later
 Requires at least: 4.0
 Tested up to: 4.5.2
-Stable tag: 0.2.0
+Stable tag: 0.2.2
 
 Create your own maps to plan your future travels and explorations while keeping track of locations you have visited.
 
@@ -27,7 +27,7 @@ Languages: English.
 
 == Changelog ==
 
-= 0.2.0 =
+= 0.2.2 =
 * Add: Filtering by status.
 * Add: Create a map from the editor.
 
