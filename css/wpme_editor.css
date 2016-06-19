@@ -1,5 +1,5 @@
 /*****************************
-		WPENGINE OVERRIDE 
+		WPENGINE OVERRIDE
 *****************************/
 
 .modal {
@@ -15,7 +15,7 @@
 
 .btn {
 	text-shadow: inherit;
-	box-shadow: inherit;    
+	box-shadow: inherit;
 }
 
 .btn .caret {
@@ -23,7 +23,7 @@
 }
 
 /*****************************
-		CORE 
+		CORE
 *****************************/
 
 #wpfooter {
@@ -50,8 +50,8 @@
 	z-index: 500;
 }
 
-#wme-navbar-footer 
-{  
+#wme-navbar-footer
+{
 	position: absolute;
   bottom: 0px;
   width: 100%;
@@ -95,7 +95,7 @@
 }
 
 /*****************************
-		BUTTONS / ELEMENTS 
+		BUTTONS / ELEMENTS
 *****************************/
 
 isteven-multi-select {
@@ -106,7 +106,6 @@ isteven-multi-select {
 	background: #337AB7;
 	color: white;
 	border: none;
-	min-height: 30px !important;
 	font-size: inherit;
 }
 
@@ -131,7 +130,7 @@ isteven-multi-select {
   }
 
 /*****************************
-		MAPS, ICONS AND STUFF 
+		MAPS, ICONS AND STUFF
 *****************************/
 
 #wpme-info {
@@ -233,5 +232,13 @@ isteven-multi-select {
 	.modal-backdrop {
 		display: none !important;
 	}
-	
+
+}
+
+button, .button, .multiSelect > button {
+	text-transform: uppercase !important;
+	font-size: 11px !important;
+	min-height: 28px !important;
+	border-radius: 0px !important;
+	border: none !important;
 }

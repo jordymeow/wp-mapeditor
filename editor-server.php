@@ -8,6 +8,7 @@ class Meow_MapEditor_Server extends Meow_MapEditor {
 			add_action( 'admin_menu', array( $this, 'admin_menu' ) );
 			add_action( 'delete_post', array( $this, 'delete_post' ) );
 			add_action( 'admin_head', array( $this, 'admin_head' ) );
+			add_action( 'wp_ajax_add_map', array( $this, 'ajax_add_map' ) );
 			add_action( 'wp_ajax_edit_location', array( $this, 'ajax_edit_location' ) );
 			add_action( 'wp_ajax_add_location', array( $this, 'ajax_add_location' ) );
 			add_action( 'wp_ajax_delete_location', array( $this, 'ajax_delete_location' ) );
@@ -171,6 +172,25 @@ class Meow_MapEditor_Server extends Meow_MapEditor {
 		delete_post_meta( $id, 'wme_rating' );
 		delete_post_meta( $id, 'wme_coordinates' );
 		delete_post_meta( $id, 'wme_difficulty' );
+	}
+
+	function ajax_add_map() {
+		$map = json_decode( stripslashes( $_POST['map'] ) );
+		if ( empty( $map ) ) {
+			echo json_encode( array( 'success' => false, 'message' => "No map information." ) );
+			wp_die();
+		}
+
+		// Create the category
+		$mp = array( 'cat_name' => $map->name );
+		$term = wp_insert_term( $map->name, 'map' );
+		if ( is_wp_error( $term->id ) ) {
+			echo json_encode( array( 'success' => false, 'data' => $post_id->get_error_message() ) );
+			die;
+		}
+		$map->id = $term['term_id'];
+		echo json_encode( array( 'success' => true, 'data' => $map ) );
+		wp_die();
 	}
 
 	function ajax_edit_location() {

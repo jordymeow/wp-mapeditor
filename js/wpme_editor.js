@@ -26,12 +26,12 @@
 	function getDistanceFromLatLonInKm(lat1, lon1, lat2, lon2) {
 		var R = 6371; // Radius of the earth in km
 		var dLat = deg2rad(lat2-lat1);  // deg2rad below
-		var dLon = deg2rad(lon2-lon1); 
-		var a = 
+		var dLon = deg2rad(lon2-lon1);
+		var a =
 		Math.sin(dLat/2) * Math.sin(dLat/2) +
-		Math.cos(deg2rad(lat1)) * Math.cos(deg2rad(lat2)) * 
-		Math.sin(dLon/2) * Math.sin(dLon/2); 
-		var c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a)); 
+		Math.cos(deg2rad(lat1)) * Math.cos(deg2rad(lat2)) *
+		Math.sin(dLon/2) * Math.sin(dLon/2);
+		var c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
 		var d = R * c; // Distance in km
 		return d;
 	}
@@ -60,13 +60,20 @@
 		$scope.mapSelectMode = 'single'; // single, multiple
 		$scope.gmap = window.gmap;
 
-		$scope.constants = { 
+		$scope.constants = {
 			statuses: gmap.statuses,
 			periods: gmap.periods,
 			types: gmap.types,
 			difficulties: gmap.difficulties,
 			ratings: gmap.ratings
 		};
+
+		$scope.statuses = [];
+		$scope.selectedStatuses = [];
+		angular.forEach($scope.constants.statuses, function (m) {
+			$scope.statuses.push({ id: m, name: m, ticked: true, text: "Status" });
+			$scope.selectedStatuses.push(m);
+		});
 
 		// Editor
 		$scope.editor = {
@@ -92,15 +99,18 @@
 
 		/**************************************************************************************************
 			LOAD MAPS
-		**************************************************************************************************/	
+		**************************************************************************************************/
 
-		function loadMaps() {
-			$http.post(ajaxurl, { 
+		function loadMaps(forceMap = -1) {
+			$http.post(ajaxurl, {
 				'action': 'load_maps'
 			}).success(function (reply) {
 				var maps = [];
 				var data = angular.fromJson(reply.data);
 				angular.forEach(data, function (m) {
+					if (forceMap != -1) {
+						m.ticked = m.id == forceMap;
+					}
 					maps.push({ id: m.id, name: m.name, ticked: m.ticked });
 					if (m.ticked) {
 						$scope.mapSelect(m);
@@ -184,6 +194,48 @@
 		};
 
 		/**************************************************************************************************
+			ADD MAP
+		**************************************************************************************************/
+
+		// Display the popup
+		$scope.onAddMapClick = function () {
+			mapOnClick();
+			$scope.isAddingMap = true;
+			$scope.isEditingMap = false;
+			$scope.editor.editMap = {
+				name: ""
+			};
+			jQuery('#wpme-modal-map').modal('show');
+		}
+
+		$scope.addMap = function () {
+			var deferred = $q.defer();
+			$scope.isSavingMap = true;
+			$http.post(ajaxurl, {
+				'action': 'add_map',
+				'map': angular.toJson($scope.editor.editMap)
+			}).success(function (reply) {
+				$scope.isSavingMap = false;
+				var reply = angular.fromJson(reply);
+				if (reply.success) {
+					loadMaps(reply.data.id);
+					jQuery('#wpme-modal-map').modal('hide');
+					deferred.resolve(reply.data.id);
+				}
+				else {
+					jQuery('#wpme-modal-map').modal('hide');
+					$log.warn({ reply: reply });
+					deferred.reject(reply);
+				}
+			}).error(function (reply, status, headers) {
+				jQuery('#wpme-modal-map').modal('hide');
+				$log.error({ reply: reply });
+				deferred.reject(reply);
+			});
+			return deferred.promise;
+		};
+
+		/**************************************************************************************************
 			ADD LOCATION
 		**************************************************************************************************/
 
@@ -210,7 +262,7 @@
 		$scope.addLocation = function () {
 			var deferred = $q.defer();
 			$scope.isSavingLocation = true;
-			$http.post(ajaxurl, { 
+			$http.post(ajaxurl, {
 				'action': 'add_location',
 				'location': angular.toJson($scope.editor.editLocation)
 			}).success(function (reply) {
@@ -252,7 +304,7 @@
 		// Actually modify the location
 		$scope.editLocation = function () {
 			$scope.isSavingLocation = true;
-			$http.post(ajaxurl, { 
+			$http.post(ajaxurl, {
 				'action': 'edit_location',
 				'location': angular.toJson($scope.editor.editLocation)
 			}).success(function (reply) {
@@ -275,7 +327,7 @@
 		// Actually modify the location
 		$scope.deleteLocation = function () {
 			$scope.isSavingLocation = true;
-			$http.post(ajaxurl, { 
+			$http.post(ajaxurl, {
 				'action': 'delete_location',
 				'id': $scope.editor.selectedLocation.id
 			}).success(function (reply) {
@@ -347,7 +399,7 @@
 		$scope.saveDraggable = function () {
 			gmap.setDraggable($scope.editor.selectedLocation, $scope.displayMode);
 			$scope.isSavingLocation = true;
-			$http.post(ajaxurl, { 
+			$http.post(ajaxurl, {
 				'action': 'edit_location',
 				'location': angular.toJson($scope.editor.editLocation)
 			}).success(function (reply) {
@@ -373,15 +425,24 @@
 
 		/**************************************************************************************************
 			VIEW MODE / SEARCH
-		**************************************************************************************************/	
+		**************************************************************************************************/
 
 		$scope.setDisplayMode = function (mode) {
-			if (mode !== 'status' && mode !== 'type' && mode !== 'period') {
-				alert("Status " + mode + " not recognized.");
+			if (mode == 'status' || mode == 'type' || mode == 'period' ) {
+				$scope.displayMode = mode;
 			}
-			$scope.displayMode = mode;
+			var statuses = [];
+			angular.forEach($scope.selectedStatuses, function (m) {
+				statuses.push(m.id);
+			});
 			for (var i in $scope.locations) {
-				gmap.setLocationIcon(	$scope.locations[i], mode );
+				if (statuses.indexOf($scope.locations[i].status) >= 0) {
+					gmap.show($scope.locations[i]);
+				}
+				else {
+					gmap.hide($scope.locations[i]);
+				}
+				gmap.setLocationIcon(	$scope.locations[i], $scope.displayMode );
 			}
 		};
 
@@ -514,7 +575,7 @@
 			reader.readAsText(file);
 		};
 
-		$scope.onImportClick = function () { 
+		$scope.onImportClick = function () {
 			if ($scope.ie.currentIndex === null) {
 				$scope.ie.currentIndex = 0;
 				$scope.ie.isWorking = true;
@@ -597,16 +658,16 @@
 					};
 				}
 				angular.extend($scope.locations[location.id], {
-					id: location.id, 
-					mapId: map.id, 
+					id: location.id,
+					mapId: map.id,
 					mapName: map.name,
 					description: location.description,
-					name: location.name, 
+					name: location.name,
 					coordinates: roundCoordinates(location.coordinates),
-					type: location.type, 
-					period: location.period, 
+					type: location.type,
+					period: location.period,
 					status: location.status,
-					rating: location.rating, 
+					rating: location.rating,
 					difficulty: location.difficulty,
 					latlng:  new google.maps.LatLng(gps[0].trim(), gps[1].trim(), true)
 				});
@@ -702,7 +763,7 @@
 				$interval.cancel($scope.trackTickPromise);
 				$scope.trackTickPromise = undefined;
 			}
-			
+
 		};
 
 		$scope.onShowPhotosClick = function () {

@@ -163,7 +163,7 @@
 	w.gmap.bounce = function(location) {
 		location.marker.setAnimation(google.maps.Animation.BOUNCE);
 		setTimeout(function() {
-			location.marker.setAnimation(null); 
+			location.marker.setAnimation(null);
 		}, 750);
 	}
 
@@ -244,7 +244,7 @@
 	w.gmap.add = function(location, mode, mouseover, mouseout, click) {
 		location.marker = new google.maps.Marker({
 			position: location.latlng,
-			map: map, 
+			map: map,
 			title: location.name,
 			clickable: true
 		});

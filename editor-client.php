@@ -14,9 +14,10 @@
 				<span ng-show="mapSelectMode === 'multiple'" class="glyphicon glyphicon-globe"></span>
 			</button>
 
-			<div isteven-multi-select id="wme-map-selector" class="btn-sm" style="
+			<div isteven-multi-select id="wme-map-selector" class="btn-sm hidden-xs" style="
 					float: left;
 					margin-top: 5px;
+					margin-left: -9px;
 					position: relative;"
 				input-model="maps"
 				output-model="selectedMaps"
@@ -29,7 +30,24 @@
 				tick-property="ticked">
 			</div>
 
-			<div class="btn-group" ng-disabled="selectedMaps.length < 1 || isLoadingMap">
+			<div isteven-multi-select id="wme-status-selector" class="btn-sm" style="
+					float: left;
+					margin-top: 5px;
+					margin-left: -16px;
+					position: relative;"
+				input-model="statuses"
+				output-model="selectedStatuses"
+				helper-elements=""
+				selection-mode="multiple"
+				max-labels="2"
+				button-label="name"
+				item-label="icon name maker"
+				disable-property="disabled"
+				on-item-click="setDisplayMode(null)"
+				tick-property="ticked">
+			</div>
+
+			<div class="btn-group" ng-disabled="selectedMaps.length < 1 || isLoadingMap" style="margin-left: -6px;">
 				<button type="button" class="btn btn-primary btn-sm dropdown-toggle" data-toggle="dropdown" aria-expanded="false">
 					<span ng-if="displayMode === 'status'">
 						<span class="glyphicon glyphicon-flag"></span> <span class="hidden-xs">Status</span> <span class="caret"></span>
@@ -47,9 +65,17 @@
 					<li><a href="#" ng-click="setDisplayMode('period')"><span class="glyphicon glyphicon-tree-conifer"></span> Period</a></li>
 				</ul>
 			</div>
+
+			<span style="color: gray; margin: 0px 3px 0px 3px;" class="hidden-xs"> | </span>
+
+			<button type="button" ng-disabled="isLoadingMap" class="btn btn-success btn-sm navbar-btn hidden-xs" ng-click="onAddMapClick()">
+				<span class="glyphicon glyphicon-plus"></span> <span class="hidden-xs">Map</span>
+			</button>
+
 			<button type="button" ng-disabled="selectedMaps.length < 1 || editor.selectedLocation || isLoadingMap" class="btn btn-success btn-sm navbar-btn" ng-click="onAddLocationClick()">
 				<span class="glyphicon glyphicon-plus"></span> <span class="hidden-xs">Location</span>
 			</button>
+
 <!-- 			<button type="button" class="btn btn-success btn-sm navbar-btn">
 				<span class="glyphicon glyphicon-asterisk"></span>
 			</button> -->
@@ -84,7 +110,7 @@
 				<span class="glyphicon glyphicon-trash"></span>
 			</button>
 		</div>
-		
+
 	</div>
 	<div id="wpme-map"></div>
 	<nav id="wme-navbar-footer">
@@ -144,7 +170,7 @@
 								</div>
 							</div>
 					</div>
-					
+
 					<div class="row">
 						<div class="col-md-6">
 							<div class="form-group">
@@ -167,19 +193,19 @@
 						<div class="row">
 							<div class="col-md-4">
 								<label>Period / Season</label>
-								<select id="period" class="form-control" 
+								<select id="period" class="form-control"
 									ng-options="p as p for p in constants.periods" ng-model="editor.editLocation.period">
 								</select>
 							</div>
 							<div class="col-md-4">
 								<label>Difficulty</label>
-								<select id="difficulty" class="form-control" 
+								<select id="difficulty" class="form-control"
 									ng-options="d as d for d in constants.difficulties" ng-model="editor.editLocation.difficulty">
 								</select>
 							</div>
 							<div class="col-md-4">
 								<label>Rating</label>
-								<select id="rating" class="form-control" 
+								<select id="rating" class="form-control"
 									ng-options="r as r for r in constants.ratings" ng-model="editor.editLocation.rating">
 								</select>
 							</div>
@@ -191,7 +217,7 @@
 				<button ng-show="isEditingLocation" type="button" ladda="isSavingLocation" ng-click="editLocation()" class="btn btn-primary pull-right"><span class="glyphicon glyphicon-pen"></span> Modify</button>
 				<button ng-show="isAddingLocation" type="button" ladda="isSavingLocation" ng-click="addLocation()" class="btn btn-primary pull-right"><span class="glyphicon glyphicon-plus"></span> Add</button>
 				<div ng-show="isAddingLocation" class="form-group pull-right">
-					<select id="map" class="form-control" 
+					<select id="map" class="form-control"
 						ng-options="r.id as r.name for r in maps" ng-model="editor.editLocation.mapId"
 						style="margin: 3px 13px 3px 0px; width: 200px;">
 					</select>
@@ -200,6 +226,28 @@
 		</div><!-- /.modal-content -->
 	</div><!-- /.modal-dialog -->
 </div><!-- /.modal -->
+
+<div class="modal" id="wpme-modal-map">
+	<div class="modal-dialog">
+		<div class="modal-content">
+			<div class="modal-body">
+				<button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+				<h4 style="margin-top: 0px;">Map</h4>
+				<form>
+					<div class="form-group">
+						<label>Name</label>
+						<input type="text" class="form-control" id="name" placeholder="Name" ng-model="editor.editMap.name">
+					</div>
+				</form>
+			</div>
+			<div class="modal-footer">
+				<button ng-show="isEditingMap" type="button" ladda="isSavingMap" ng-click="editMap()" class="btn btn-primary pull-right"><span class="glyphicon glyphicon-pen"></span> Modify</button>
+				<button ng-show="isAddingMap" type="button" ladda="isSavingMap" ng-click="addMap()" class="btn btn-primary pull-right"><span class="glyphicon glyphicon-plus"></span> Add</button>
+			</div>
+		</div><!-- /.modal-content -->
+	</div><!-- /.modal-dialog -->
+</div><!-- /.modal -->
+
 
 <div class="modal" id="wpme-import-export">
 	<div class="modal-dialog">
@@ -245,13 +293,13 @@
 				<div ng-show="ie.isExporting && gmap.export">
 					<p><br />Working on it! :) There will be KML, CSV. What else do you need?</p>
 				</div>
-				
+
 			</div>
 			<div class="modal-footer">
 				<button ng-show="ie.isImporting" ng-disabled="!ie.locations.length" type="button" ladda="ie.isWorking" ng-click="onImportClick()" class="btn btn-primary pull-right"><span class="glyphicon glyphicon-plus"></span> Import</button>
 				<button ng-show="ie.isExporting" ng-disabled="!ie.locations.length" type="button" ladda="ie.isWorking" ng-click="exportLocations()" class="btn btn-primary pull-right"><span class="glyphicon glyphicon-plus"></span> Export</button>
 				<div ng-show="ie.isImporting || ie.isExporting" class="form-group pull-right">
-					<select id="map" class="form-control" 
+					<select id="map" class="form-control"
 						ng-options="r.id as r.name for r in maps" ng-model="ie.mapId"
 						style="margin: 3px 13px 3px 0px; width: 200px;">
 					</select>

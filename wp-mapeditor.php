@@ -3,14 +3,14 @@
 Plugin Name: WP Map Editor
 Plugin URI: http://apps.meow.fr
 Description: Create your own maps to plan your future travels and explorations while keeping track of locations you have visited.
-Version: 0.1.2
+Version: 0.2.0
 Author: Jordy Meow
 Author URI: http://apps.meow.fr
 */
 
 class Meow_MapEditor {
 
-	public $version = '0.1.2';
+	public $version = '0.2.0';
 
 	public function __construct() {
 		if ( $this->is_pro() || is_super_admin() ) {
@@ -334,7 +334,7 @@ class Meow_MapEditor {
 		}
 		$subscr_id = get_option( 'wme_pro_serial', "" );
 		if ( !empty( $subscr_id ) )
-			return validate_pro( wme_getoption( "subscr_id", "wme_pro", array() ) );
+			return $this->validate_pro( get_option( "subscr_id", "wme_pro", array() ) );
 		return false;
 	}
 

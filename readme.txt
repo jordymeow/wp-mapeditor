@@ -3,9 +3,9 @@ Contributors: TigrouMeow
 Donate link: https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=H2S7S3G4XMJ6J
 Tags: map, maps, editor, google, googlemaps, location, pin, plugin
 License: GPLv2 or later
-Requires at least: 3.5
-Tested up to: 4.3
-Stable tag: 0.1.2
+Requires at least: 4.0
+Tested up to: 4.5.2
+Stable tag: 0.2.0
 
 Create your own maps to plan your future travels and explorations while keeping track of locations you have visited.
 
@@ -27,13 +27,13 @@ Languages: English.
 
 == Changelog ==
 
+= 0.2.0 =
+* Add: Filtering by status.
+* Add: Create a map from the editor.
+
 = 0.1.0 =
 * Fixed validation.
-
-= 0.1.0 =
 * Tiny improvements.
-
-= 0.0.2 =
 * Name fix.
 
 = 0.0.1 =
