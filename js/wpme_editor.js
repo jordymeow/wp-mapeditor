@@ -143,10 +143,6 @@
 		}
 
 		$scope.toggleSelectMode = function () {
-			if (!$scope.gmap.multimaps) {
-				jQuery('#wpme-modal-pro-only').modal('show');
-				return;
-			}
 			if ($scope.mapSelectMode === 'single')
 				$scope.mapSelectMode = 'multiple';
 			else
@@ -451,10 +447,6 @@
 		**************************************************************************************************/
 
 		$scope.onImportExportClick = function () {
-			if (!$scope.gmap.import && !$scope.gmap.import) {
-				jQuery('#wpme-modal-pro-only').modal('show');
-				return;
-			}
 			$scope.ie.file = null;
 			$scope.ie.status = 'DRAFT';
 			$scope.ie.type = 'UNSPECIFIED';

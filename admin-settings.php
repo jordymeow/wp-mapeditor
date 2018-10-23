@@ -25,18 +25,11 @@ class Meow_MapEditor_Settings extends Meow_MapEditor_Server {
     }
 
     function settings_init() {
-        if ( isset( $_POST ) && isset( $_POST['wme_pro'] ) )
-            $this->validate_pro( $_POST['wme_pro']['subscr_id'] );
-        $pro_status = get_option( 'wme_pro_status', "Not Pro." );
         require( 'class.settings-api.php' );
         $sections = array(
             array(
                 'id' => 'wme_basics',
                 'title' => __( 'Basics', 'wp-mapeditor' )
-            ),
-            array(
-                'id' => 'wme_pro',
-                'title' => __( 'Pro (Serial)', 'wp-mapeditor' )
             )
         );
         $fields = array(
@@ -59,7 +52,7 @@ class Meow_MapEditor_Settings extends Meow_MapEditor_Server {
                     'name' => 'multimaps',
                     'disabled' => true,
                     'label' => __( 'Multi-maps', 'wp-mapeditor' ),
-                    'desc' => __( 'Select many maps at the same time (Pro only).', 'wp-mapeditor' ),
+                    'desc' => __( 'Select many maps at the same time.', 'wp-mapeditor' ),
                     'type' => 'checkbox',
                     'default' => ""
                 ),
@@ -67,37 +60,22 @@ class Meow_MapEditor_Settings extends Meow_MapEditor_Server {
                     'name' => 'allusers',
                     'disabled' => true,
                     'label' => __( 'For all users', 'wp-mapeditor' ),
-                    'desc' => __( 'All users with the <b>Map Editor</b> role will be able to use the map editing functions (Pro only).', 'wp-mapeditor' ),
+                    'desc' => __( 'All users with the <b>Map Editor</b> role will be able to use the map editing functions.', 'wp-mapeditor' ),
                     'type' => 'checkbox',
                     'default' => ""
                 ),
                 array(
                     'name' => 'import',
                     'label' => __( 'Enable Import', 'wp-mapeditor' ),
-                    'desc' => __( 'Enable the tools to import locations (Pro only).', 'wp-mapeditor' ),
+                    'desc' => __( 'Enable the tools to import locations.', 'wp-mapeditor' ),
                     'type' => 'checkbox',
                     'default' => ""
                 ),
                 array(
                     'name' => 'export',
                     'label' => __( 'Enable Export', 'wp-mapeditor' ),
-                    'desc' => __( 'Enable the tools to export locations (Pro only).', 'wp-mapeditor' ),
+                    'desc' => __( 'Enable the tools to export locations.', 'wp-mapeditor' ),
                     'type' => 'checkbox',
-                    'default' => ""
-                ),
-            ),
-            'wme_pro' => array(
-                array(
-                    'name' => 'pro',
-                    'label' => '',
-                    'desc' => __( sprintf( 'Status: %s', $pro_status ), 'wp-mapeditor' ),
-                    'type' => 'html'
-                ),
-                array(
-                    'name' => 'subscr_id',
-                    'label' => __( 'Serial', 'wp-mapeditor' ),
-                    'desc' => __( '<br />Enter your serial or subscription ID here. If you don\'t have one yet, get one <a target="_blank" href="http://apps.meow.fr/wp-mapeditor/">right here</a>.', 'wp-mapeditor' ),
-                    'type' => 'text',
                     'default' => ""
                 ),
             )
@@ -112,17 +90,13 @@ class Meow_MapEditor_Settings extends Meow_MapEditor_Server {
     function settings_page() {
         global $wme_settings_api;
         echo '<div class="wrap">';
-        jordy_meow_donation(true);
         echo "<div id='icon-options-general' class='icon32'><br></div><h2>WP Map Editor";
-        by_jordy_meow();
         echo "</h2>";
-        echo "<p>For more information about WP Map Editor, please visit the official website here: <a target='_blank' href='http://apps.meow.fr/wp-mapeditor/'>WP Map Editor</a> on Meow Apps.</p>";
         $wme_settings_api->show_navigation();
         $wme_settings_api->show_forms();
         echo '</div>';
-        jordy_meow_footer();
     }
-    
+
 }
 
 ?>

@@ -134,21 +134,6 @@
 
 </div>
 
-<div class="modal" id="wpme-modal-pro-only">
-	<div class="modal-dialog">
-		<div class="modal-content">
-			<div class="modal-body">
-				<button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-				<h4 style="margin-top: 0px;">Feature not available</h4>
-				<p>This feature is currently disabled. That is either because the feature is disabled in your settings or because a Pro serial key is required.</p>
-			</div>
-			<div class="modal-footer">
-				<button type="button" data-dismiss="modal" class="btn btn-primary pull-right">Close</button>
-		</div>
-		</div>
-	</div>
-</div>
-
 <div class="modal" id="wpme-modal-location">
 	<div class="modal-dialog">
 		<div class="modal-content">

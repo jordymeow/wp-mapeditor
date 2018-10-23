@@ -1,19 +1,19 @@
 <?php
 /*
 Plugin Name: WP Map Editor
-Plugin URI: http://apps.meow.fr
+Plugin URI: https://meowapps.com
 Description: Create your own maps to plan your future travels and explorations while keeping track of locations you have visited.
-Version: 0.2.2
+Version: 0.2.4
 Author: Jordy Meow
-Author URI: http://apps.meow.fr
+Author URI: https://meowapps.com
 */
 
 class Meow_MapEditor {
 
-	public $version = '0.2.2';
+	public $version = '0.2.4';
 
 	public function __construct() {
-		if ( $this->is_pro() || is_super_admin() ) {
+		if ( is_super_admin() ) {
 			add_action( 'init', array( $this, 'init' ) );
 			add_action( 'add_meta_boxes', array( $this, 'add_location_metaboxes' ) );
 			add_action( 'save_post', array( $this, 'save_location_metaboxes' ), 1, 2 );
@@ -319,67 +319,6 @@ class Meow_MapEditor {
 		return $default;
 	}
 
-	/**
-	 *
-	 * PRO
-	 * Come on, it's not so expensive :'(
-	 *
-	 */
-
-	function is_pro() {
-		$validated = get_transient( 'wme_validated' );
-		if ( $validated ) {
-			$serial = get_option( 'wme_pro_serial');
-			return !empty( $serial );
-		}
-		$subscr_id = get_option( 'wme_pro_serial', "" );
-		if ( !empty( $subscr_id ) )
-			return $this->validate_pro( get_option( "subscr_id", "wme_pro", array() ) );
-		return false;
-	}
-
-	function validate_pro( $subscr_id ) {
-		if ( empty( $subscr_id ) ) {
-			delete_option( 'wme_pro_serial', "" );
-			delete_option( 'wme_pro_status', "" );
-			set_transient( 'wme_validated', false, 0 );
-			return false;
-		}
-		require_once $this->get_wordpress_root() . WPINC . '/class-IXR.php';
-		require_once $this->get_wordpress_root() . WPINC . '/class-wp-http-ixr-client.php';
-		$client = new WP_HTTP_IXR_Client( 'http://apps.meow.fr/xmlrpc.php' );
-		$client->useragent = 'MeowApps';
-		if ( !$client->query( 'meow_sales.auth', $subscr_id, 'map-editor', get_site_url() ) ) {
-			update_option( 'wme_pro_serial', "" );
-			update_option( 'wme_pro_status', "A network error: " . $client->getErrorMessage() );
-			set_transient( 'wme_validated', false, 0 );
-			return false;
-		}
-		$post = $client->getResponse();
-		if ( !$post['success'] ) {
-			if ( $post['message_code'] == "NO_SUBSCRIPTION" ) {
-				$status = __( "Your serial does not seem right." );
-			}
-			else if ( $post['message_code'] == "NOT_ACTIVE" ) {
-				$status = __( "Your subscription is not active." );
-			}
-			else if ( $post['message_code'] == "TOO_MANY_URLS" ) {
-				$status = __( "Too many URLs are linked to your subscription." );
-			}
-			else {
-				$status = "There is a problem with your subscription.";
-			}
-			update_option( 'wme_pro_serial', "" );
-			update_option( 'wme_pro_status', $status );
-			set_transient( 'wme_validated', false, 0 );
-			return false;
-		}
-		set_transient( 'wme_validated', $subscr_id, 3600 * 24 * 100 );
-		update_option( 'wme_pro_serial', $subscr_id );
-		update_option( 'wme_pro_status', __( "Your subscription is enabled." ) );
-		return true;
-	}
-
 	function get_wordpress_root() {
 		return ABSPATH;
 	}
@@ -617,7 +556,6 @@ add_action( 'plugins_loaded', 'meow_map_editor_init' );
 function meow_map_editor_init() {
 	if ( class_exists( 'Meow_MapEditor' ) ) {
 		if ( is_admin() ) {
-			include "jordy_meow_footer.php";
 			include "editor-server.php";
 			if ( is_super_admin() ) {
 				include "admin-settings.php";
